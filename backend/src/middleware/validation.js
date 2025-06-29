@@ -2,7 +2,7 @@ const Joi = require('joi');
 
 const validateBody = (schema) => {
   return (req, res, next) => {
-    const { error } = schema.validate(req.body);
+    const { error, value } = schema.validate(req.body);
     if (error) {
       return res.status(400).json({
         success: false,
@@ -10,13 +10,14 @@ const validateBody = (schema) => {
         details: error.details.map(detail => detail.message)
       });
     }
+    req.body = value;
     next();
   };
 };
 
 const validateQuery = (schema) => {
   return (req, res, next) => {
-    const { error } = schema.validate(req.query);
+    const { error, value } = schema.validate(req.query);
     if (error) {
       return res.status(400).json({
         success: false,
@@ -24,13 +25,14 @@ const validateQuery = (schema) => {
         details: error.details.map(detail => detail.message)
       });
     }
+    req.query = value;
     next();
   };
 };
 
 const validateParams = (schema) => {
   return (req, res, next) => {
-    const { error } = schema.validate(req.params);
+    const { error, value } = schema.validate(req.params);
     if (error) {
       return res.status(400).json({
         success: false,
@@ -38,6 +40,7 @@ const validateParams = (schema) => {
         details: error.details.map(detail => detail.message)
       });
     }
+    req.params = value;
     next();
   };
 };

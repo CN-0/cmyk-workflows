@@ -10,7 +10,7 @@ const Workflows = () => {
   const navigate = useNavigate();
   const { workflows, executeWorkflow, deleteWorkflow } = useWorkflow();
   const [filter, setFilter] = useState('all');
-  const [sortBy, setSortBy] = useState('created');
+  const [sortBy, setSortBy] = useState('created_at');
 
   const filteredWorkflows = workflows.filter(workflow => {
     if (filter === 'all') return true;
@@ -21,7 +21,7 @@ const Workflows = () => {
     switch (sortBy) {
       case 'name':
         return a.name.localeCompare(b.name);
-      case 'created':
+      case 'created_at':
         return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
       case 'executions':
         return b.executionCount - a.executionCount;
@@ -81,7 +81,7 @@ const Workflows = () => {
                   onChange={(e) => setSortBy(e.target.value)}
                   className="text-sm border border-gray-300 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
-                  <option value="created">Created Date</option>
+                  <option value="created_at">Created Date</option>
                   <option value="name">Name</option>
                   <option value="executions">Executions</option>
                 </select>
