@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import apiService from '../services/api';
 import { nodeTemplates } from '../data/nodeTemplates';
 
 const WorkflowContext = createContext(undefined);
@@ -14,112 +15,103 @@ export const useWorkflow = () => {
 export const WorkflowProvider = ({ children }) => {
   const [workflows, setWorkflows] = useState([]);
   const [executions, setExecutions] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  const loadWorkflows = async () => {
+    setLoading(true);
+    try {
+      const response = await apiService.getWorkflows();
+      if (response.success) {
+        setWorkflows(response.data);
+      }
+    } catch (error) {
+      console.error('Failed to load workflows:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadExecutions = async () => {
+    try {
+      const response = await apiService.getExecutions();
+      if (response.success) {
+        setExecutions(response.data);
+      }
+    } catch (error) {
+      console.error('Failed to load executions:', error);
+    }
+  };
 
   useEffect(() => {
-    // Load mock data
-    const mockWorkflows = [
-      {
-        id: '1',
-        name: 'Email Marketing Automation',
-        description: 'Automatically send welcome emails to new subscribers',
-        status: 'active',
-        nodes: [],
-        edges: [],
-        createdAt: new Date(Date.now() - 86400000),
-        updatedAt: new Date(),
-        createdBy: '1',
-        tags: ['email', 'marketing'],
-        executionCount: 145,
-        successRate: 96.5,
-      },
-      {
-        id: '2',
-        name: 'Lead Processing Pipeline',
-        description: 'Process and qualify incoming leads from multiple sources',
-        status: 'active',
-        nodes: [],
-        edges: [],
-        createdAt: new Date(Date.now() - 172800000),
-        updatedAt: new Date(Date.now() - 3600000),
-        createdBy: '1',
-        tags: ['leads', 'crm'],
-        executionCount: 89,
-        successRate: 94.2,
-      },
-      {
-        id: '3',
-        name: 'Customer Support Ticket Routing',
-        description: 'Automatically route support tickets based on priority and category',
-        status: 'draft',
-        nodes: [],
-        edges: [],
-        createdAt: new Date(Date.now() - 7200000),
-        updatedAt: new Date(Date.now() - 1800000),
-        createdBy: '1',
-        tags: ['support', 'automation'],
-        executionCount: 0,
-        successRate: 0,
-      },
-    ];
-
-    setWorkflows(mockWorkflows);
+    loadWorkflows();
+    loadExecutions();
   }, []);
 
-  const createWorkflow = (workflowData) => {
-    const newWorkflow = {
-      ...workflowData,
-      id: Date.now().toString(),
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      executionCount: 0,
-      successRate: 0,
-    };
-    setWorkflows(prev => [...prev, newWorkflow]);
+  const createWorkflow = async (workflowData) => {
+    try {
+      const response = await apiService.createWorkflow(workflowData);
+      if (response.success) {
+        setWorkflows(prev => [...prev, response.data]);
+        return response.data;
+      }
+    } catch (error) {
+      console.error('Failed to create workflow:', error);
+      throw error;
+    }
   };
 
-  const updateWorkflow = (id, updates) => {
-    setWorkflows(prev => prev.map(workflow => 
-      workflow.id === id 
-        ? { ...workflow, ...updates, updatedAt: new Date() }
-        : workflow
-    ));
+  const updateWorkflow = async (id, updates) => {
+    try {
+      const response = await apiService.updateWorkflow(id, updates);
+      if (response.success) {
+        setWorkflows(prev => prev.map(workflow => 
+          workflow.id === id ? response.data : workflow
+        ));
+        return response.data;
+      }
+    } catch (error) {
+      console.error('Failed to update workflow:', error);
+      throw error;
+    }
   };
 
-  const deleteWorkflow = (id) => {
-    setWorkflows(prev => prev.filter(workflow => workflow.id !== id));
+  const deleteWorkflow = async (id) => {
+    try {
+      const response = await apiService.deleteWorkflow(id);
+      if (response.success) {
+        setWorkflows(prev => prev.filter(workflow => workflow.id !== id));
+      }
+    } catch (error) {
+      console.error('Failed to delete workflow:', error);
+      throw error;
+    }
   };
 
-  const executeWorkflow = (id) => {
-    const execution = {
-      id: Date.now().toString(),
-      workflowId: id,
-      status: 'running',
-      startedAt: new Date(),
-      logs: [
-        {
-          id: '1',
-          nodeId: 'trigger',
-          timestamp: new Date(),
-          level: 'info',
-          message: 'Workflow execution started',
-        },
-      ],
-    };
-    setExecutions(prev => [...prev, execution]);
+  const executeWorkflow = async (id) => {
+    try {
+      const response = await apiService.triggerWorkflow(id);
+      if (response.success) {
+        // Reload executions to show the new one
+        loadExecutions();
+        return response.data;
+      }
+    } catch (error) {
+      console.error('Failed to execute workflow:', error);
+      throw error;
+    }
+  };
 
-    // Simulate workflow execution
-    setTimeout(() => {
-      setExecutions(prev => prev.map(exec => 
-        exec.id === execution.id 
-          ? { 
-              ...exec, 
-              status: Math.random() > 0.1 ? 'completed' : 'failed',
-              completedAt: new Date(),
-              error: Math.random() > 0.1 ? undefined : 'Connection timeout',
-            }
-          : exec
-      ));
-    }, 3000);
+  const duplicateWorkflow = async (id) => {
+    try {
+      const response = await apiService.duplicateWorkflow(id);
+      if (response.success) {
+        setWorkflows(prev => [...prev, response.data]);
+        return response.data;
+      }
+    } catch (error) {
+      console.error('Failed to duplicate workflow:', error);
+      throw error;
+    }
   };
 
   return (
@@ -127,10 +119,14 @@ export const WorkflowProvider = ({ children }) => {
       workflows,
       executions,
       nodeTemplates,
+      loading,
       createWorkflow,
       updateWorkflow,
       deleteWorkflow,
       executeWorkflow,
+      duplicateWorkflow,
+      loadWorkflows,
+      loadExecutions,
     }}>
       {children}
     </WorkflowContext.Provider>
