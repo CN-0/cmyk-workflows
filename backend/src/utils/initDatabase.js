@@ -1,4 +1,4 @@
-const Database = require('sqlite');
+const { open } = require('sqlite');
 const sqlite3 = require('sqlite3');
 const path = require('path');
 const logger = require('./logger');
@@ -6,7 +6,7 @@ const logger = require('./logger');
 async function initializeDatabase() {
   try {
     // Initialize auth database
-    const authDb = await Database.open({
+    const authDb = await open({
       filename: path.join(__dirname, '../../data/auth.db'),
       driver: sqlite3.Database
     });
@@ -49,7 +49,7 @@ async function initializeDatabase() {
     await authDb.close();
 
     // Initialize workflow database
-    const workflowDb = await Database.open({
+    const workflowDb = await open({
       filename: path.join(__dirname, '../../data/workflow.db'),
       driver: sqlite3.Database
     });
@@ -96,7 +96,7 @@ async function initializeDatabase() {
     await workflowDb.close();
 
     // Initialize execution database
-    const executionDb = await Database.open({
+    const executionDb = await open({
       filename: path.join(__dirname, '../../data/execution.db'),
       driver: sqlite3.Database
     });
