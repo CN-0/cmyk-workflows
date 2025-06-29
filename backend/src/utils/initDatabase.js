@@ -11,26 +11,28 @@ async function initializeDatabase() {
       driver: sqlite3.Database
     });
 
-    // Create users table
+    // Create users table with UUID support and required columns
     await authDb.exec(`
       CREATE TABLE IF NOT EXISTS users (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id TEXT PRIMARY KEY,
         email TEXT UNIQUE NOT NULL,
         password TEXT NOT NULL,
         name TEXT NOT NULL,
-        role TEXT DEFAULT 'user',
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        role TEXT DEFAULT 'editor',
+        avatar TEXT,
+        last_login DATETIME,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
       )
     `);
 
-    // Create sessions table for authentication
+    // Create sessions table for authentication with TEXT user_id
     await authDb.exec(`
       CREATE TABLE IF NOT EXISTS sessions (
         id TEXT PRIMARY KEY,
-        user_id INTEGER NOT NULL,
+        user_id TEXT NOT NULL,
         expires_at DATETIME NOT NULL,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (user_id) REFERENCES users (id)
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
       )
     `);
 
@@ -43,23 +45,26 @@ async function initializeDatabase() {
       driver: sqlite3.Database
     });
 
+    // Create workflows table with UUID support and required columns
     await workflowDb.exec(`
       CREATE TABLE IF NOT EXISTS workflows (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id TEXT PRIMARY KEY,
         name TEXT NOT NULL,
         description TEXT,
         definition TEXT NOT NULL,
-        user_id INTEGER NOT NULL,
+        created_by TEXT NOT NULL,
         status TEXT DEFAULT 'draft',
+        version INTEGER DEFAULT 1,
+        tags TEXT,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (user_id) REFERENCES users (id)
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
       )
     `);
 
+    // Create workflow templates table
     await workflowDb.exec(`
       CREATE TABLE IF NOT EXISTS workflow_templates (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id TEXT PRIMARY KEY,
         name TEXT NOT NULL,
         description TEXT,
         definition TEXT NOT NULL,
@@ -78,31 +83,36 @@ async function initializeDatabase() {
       driver: sqlite3.Database
     });
 
+    // Create workflow_executions table (renamed from executions) with UUID support
     await executionDb.exec(`
-      CREATE TABLE IF NOT EXISTS executions (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        workflow_id INTEGER NOT NULL,
-        user_id INTEGER NOT NULL,
-        status TEXT DEFAULT 'pending',
+      CREATE TABLE IF NOT EXISTS workflow_executions (
+        id TEXT PRIMARY KEY,
+        workflow_id TEXT NOT NULL,
+        workflow_version INTEGER NOT NULL,
+        triggered_by TEXT NOT NULL,
+        status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'running', 'completed', 'failed', 'cancelled')),
         input_data TEXT,
         output_data TEXT,
+        trigger_data TEXT,
+        context TEXT DEFAULT '{}',
+        metrics TEXT DEFAULT '{}',
         error_message TEXT,
         started_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        completed_at DATETIME,
-        FOREIGN KEY (workflow_id) REFERENCES workflows (id),
-        FOREIGN KEY (user_id) REFERENCES users (id)
+        completed_at DATETIME
       )
     `);
 
+    // Create execution_logs table with UUID support and additional columns
     await executionDb.exec(`
       CREATE TABLE IF NOT EXISTS execution_logs (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        execution_id INTEGER NOT NULL,
+        id TEXT PRIMARY KEY,
+        execution_id TEXT NOT NULL,
         node_id TEXT,
         level TEXT DEFAULT 'info',
         message TEXT NOT NULL,
-        timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (execution_id) REFERENCES executions (id)
+        data TEXT,
+        duration INTEGER,
+        timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
       )
     `);
 
