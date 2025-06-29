@@ -2,7 +2,8 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
-const { connectToAllDatabases } = require('./utils/database');
+const { Database } = require('./utils/database');
+const { RedisClient } = require('./utils/redis');
 const { initializeDatabase } = require('./utils/initDatabase');
 const logger = require('./utils/logger');
 const errorHandler = require('./middleware/errorHandler');
@@ -34,6 +35,35 @@ app.use(limiter);
 // Body parsing middleware
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
+
+// Initialize database connections
+async function connectToAllDatabases() {
+  try {
+    // Initialize auth database
+    const authDb = new Database('./backend/data/auth.db');
+    await authDb.connect();
+    app.locals.authDb = authDb;
+
+    // Initialize workflow database
+    const workflowDb = new Database('./backend/data/workflow.db');
+    await workflowDb.connect();
+    app.locals.workflowDb = workflowDb;
+
+    // Initialize execution database
+    const executionDb = new Database('./backend/data/execution.db');
+    await executionDb.connect();
+    app.locals.executionDb = executionDb;
+
+    // Initialize Redis (optional)
+    const redis = new RedisClient(process.env.REDIS_URL || 'redis://localhost:6379');
+    app.locals.redis = redis;
+
+    logger.info('Connected to all databases');
+  } catch (error) {
+    logger.error('Failed to connect to databases:', error);
+    throw error;
+  }
+}
 
 // Routes
 app.use('/api/auth', authRoutes);
