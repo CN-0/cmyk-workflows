@@ -11,6 +11,12 @@ async function initializeDatabase() {
       driver: sqlite3.Database
     });
 
+    // Enable foreign key constraints
+    await authDb.exec('PRAGMA foreign_keys = ON');
+
+    // Begin transaction for auth database
+    await authDb.exec('BEGIN TRANSACTION');
+
     // Create users table with UUID support and required columns
     await authDb.exec(`
       CREATE TABLE IF NOT EXISTS users (
@@ -36,6 +42,9 @@ async function initializeDatabase() {
       )
     `);
 
+    // Commit transaction for auth database
+    await authDb.exec('COMMIT');
+
     logger.info('Auth database tables initialized successfully');
     await authDb.close();
 
@@ -44,6 +53,12 @@ async function initializeDatabase() {
       filename: path.join(__dirname, '../../data/workflow.db'),
       driver: sqlite3.Database
     });
+
+    // Enable foreign key constraints
+    await workflowDb.exec('PRAGMA foreign_keys = ON');
+
+    // Begin transaction for workflow database
+    await workflowDb.exec('BEGIN TRANSACTION');
 
     // Create workflows table with UUID support and required columns
     await workflowDb.exec(`
@@ -74,6 +89,9 @@ async function initializeDatabase() {
       )
     `);
 
+    // Commit transaction for workflow database
+    await workflowDb.exec('COMMIT');
+
     logger.info('Workflow database tables initialized successfully');
     await workflowDb.close();
 
@@ -82,6 +100,12 @@ async function initializeDatabase() {
       filename: path.join(__dirname, '../../data/execution.db'),
       driver: sqlite3.Database
     });
+
+    // Enable foreign key constraints
+    await executionDb.exec('PRAGMA foreign_keys = ON');
+
+    // Begin transaction for execution database
+    await executionDb.exec('BEGIN TRANSACTION');
 
     // Create workflow_executions table (renamed from executions) with UUID support
     await executionDb.exec(`
@@ -115,6 +139,9 @@ async function initializeDatabase() {
         timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
       )
     `);
+
+    // Commit transaction for execution database
+    await executionDb.exec('COMMIT');
 
     logger.info('Execution database tables initialized successfully');
     await executionDb.close();
