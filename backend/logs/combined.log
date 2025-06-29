@@ -111,3 +111,9 @@
 {"level":"info","message":"Connected to all databases","service":"flowforge-monolith","timestamp":"2025-06-29T21:04:53.430Z"}
 {"level":"info","message":"Monolithic backend running on port 3000","service":"flowforge-monolith","timestamp":"2025-06-29T21:04:53.433Z"}
 {"level":"info","message":"SIGINT received, shutting down gracefully","service":"flowforge-monolith","timestamp":"2025-06-29T21:05:31.721Z"}
+{"level":"info","message":"Auth database tables initialized successfully","service":"flowforge-monolith","timestamp":"2025-06-29T21:08:41.708Z"}
+{"level":"info","message":"Workflow database tables initialized successfully","service":"flowforge-monolith","timestamp":"2025-06-29T21:08:41.749Z"}
+{"level":"info","message":"Execution database tables initialized successfully","service":"flowforge-monolith","timestamp":"2025-06-29T21:08:41.790Z"}
+{"level":"info","message":"All database tables initialized successfully","service":"flowforge-monolith","timestamp":"2025-06-29T21:08:41.790Z"}
+{"level":"info","message":"Connected to all databases","service":"flowforge-monolith","timestamp":"2025-06-29T21:08:41.792Z"}
+{"level":"info","message":"Monolithic backend running on port 3000","service":"flowforge-monolith","timestamp":"2025-06-29T21:08:41.795Z"}
