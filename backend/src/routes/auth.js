@@ -70,6 +70,7 @@ router.post('/register', validateBody(registerSchema), async (req, res) => {
 
     // Create user
     const userId = uuidv4();
+    console.log(userId, email, hashedPassword, name, role)
     await authDb.query(
       `INSERT INTO users (id, email, password, name, role, created_at, updated_at) 
        VALUES (?, ?, ?, ?, ?, datetime('now'), datetime('now'))`,
