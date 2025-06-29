@@ -1,0 +1,22 @@
+{
+  "name": "workflow-automation-backend",
+  "version": "1.0.0",
+  "description": "Backend services for workflow automation platform",
+  "main": "setup.js",
+  "scripts": {
+    "setup": "node setup.js",
+    "dev": "concurrently \"npm run dev:auth\" \"npm run dev:gateway\" \"npm run dev:workflow\" \"npm run dev:execution\"",
+    "dev:auth": "cd services/auth && npm run dev",
+    "dev:gateway": "cd services/gateway && npm run dev",
+    "dev:workflow": "cd services/workflow && npm run dev",
+    "dev:execution": "cd services/execution && npm run dev",
+    "migrate": "node scripts/migrate.js",
+    "seed": "node scripts/seed.js"
+  },
+  "dependencies": {
+    "concurrently": "^8.2.2",
+    "sqlite3": "^5.1.6",
+    "sqlite": "^5.0.1",
+    "@flowforge/shared": "*"
+  }
+}

@@ -1,0 +1,124 @@
+version: '3.8'
+
+services:
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - flowforge-network
+
+  # API Gateway
+  gateway:
+    build:
+      context: ./services/gateway
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - AUTH_SERVICE_URL=http://auth:3001
+      - WORKFLOW_SERVICE_URL=http://workflow:3002
+      - EXECUTION_SERVICE_URL=http://execution:3003
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - redis
+      - auth
+      - workflow
+      - execution
+    volumes:
+      - ./data:/app/data
+    networks:
+      - flowforge-network
+
+  # Auth Service
+  auth:
+    build:
+      context: ./services/auth
+      dockerfile: Dockerfile
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=development
+      - DATABASE_PATH=/app/data/auth.db
+      - JWT_SECRET=your-super-secret-jwt-key-change-in-production
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - redis
+    volumes:
+      - ./data:/app/data
+    networks:
+      - flowforge-network
+
+  # Workflow Service
+  workflow:
+    build:
+      context: ./services/workflow
+      dockerfile: Dockerfile
+    ports:
+      - "3002:3002"
+    environment:
+      - NODE_ENV=development
+      - DATABASE_PATH=/app/data/workflow.db
+      - REDIS_URL=redis://redis:6379
+      - AUTH_SERVICE_URL=http://auth:3001
+    depends_on:
+      - redis
+      - auth
+    volumes:
+      - ./data:/app/data
+    networks:
+      - flowforge-network
+
+  # Execution Service
+  execution:
+    build:
+      context: ./services/execution
+      dockerfile: Dockerfile
+    ports:
+      - "3003:3003"
+    environment:
+      - NODE_ENV=development
+      - DATABASE_PATH=/app/data/execution.db
+      - REDIS_URL=redis://redis:6379
+      - WORKFLOW_SERVICE_URL=http://workflow:3002
+    depends_on:
+      - redis
+      - workflow
+    volumes:
+      - ./data:/app/data
+    networks:
+      - flowforge-network
+
+  # Monitoring (Prometheus)
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+    networks:
+      - flowforge-network
+
+  # Grafana
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3001:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana_data:/var/lib/grafana
+    networks:
+      - flowforge-network
+
+volumes:
+  redis_data:
+  grafana_data:
+
+networks:
+  flowforge-network:
+    driver: bridge
