@@ -366,3 +366,17 @@
 {"level":"info","message":"Monolithic backend running on port 3000","service":"flowforge-monolith","timestamp":"2025-06-29T21:40:32.696Z"}
 {"level":"info","message":"SIGINT received, shutting down gracefully","service":"flowforge-monolith","timestamp":"2025-06-29T21:40:33.235Z"}
 {"level":"info","message":"SIGINT received, shutting down gracefully","service":"flowforge-monolith","timestamp":"2025-06-29T21:40:33.236Z"}
+{"level":"info","message":"Auth database initialized successfully","service":"flowforge-monolith","timestamp":"2025-06-29T21:40:33.848Z"}
+{"level":"info","message":"Workflow database initialized successfully","service":"flowforge-monolith","timestamp":"2025-06-29T21:40:33.887Z"}
+{"level":"info","message":"Execution database initialized successfully","service":"flowforge-monolith","timestamp":"2025-06-29T21:40:33.947Z"}
+{"level":"info","message":"All databases initialized successfully","service":"flowforge-monolith","timestamp":"2025-06-29T21:40:33.947Z"}
+{"level":"info","message":"Redis client initialized","service":"flowforge-monolith","timestamp":"2025-06-29T21:40:33.969Z"}
+{"level":"info","message":"Connected to all databases","service":"flowforge-monolith","timestamp":"2025-06-29T21:40:33.969Z"}
+{"level":"info","message":"Monolithic backend running on port 3000","service":"flowforge-monolith","timestamp":"2025-06-29T21:40:33.973Z"}
+{"level":"info","message":"127.0.0.1 - - [29/Jun/2025:21:40:34 +0000] \"GET /api/auth/me HTTP/1.1\" 200 215 \"https://localhost:5173/\" \"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36\"","service":"flowforge-monolith","timestamp":"2025-06-29T21:40:34.451Z"}
+{"level":"info","message":"127.0.0.1 - - [29/Jun/2025:21:40:34 +0000] \"GET /api/auth/me HTTP/1.1\" 200 215 \"https://localhost:5173/\" \"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36\"","service":"flowforge-monolith","timestamp":"2025-06-29T21:40:34.458Z"}
+{"level":"info","message":"127.0.0.1 - - [29/Jun/2025:21:40:34 +0000] \"GET /api/workflows HTTP/1.1\" 200 86 \"https://localhost:5173/\" \"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36\"","service":"flowforge-monolith","timestamp":"2025-06-29T21:40:34.516Z"}
+{"level":"info","message":"127.0.0.1 - - [29/Jun/2025:21:40:34 +0000] \"GET /api/executions HTTP/1.1\" 200 86 \"https://localhost:5173/\" \"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36\"","service":"flowforge-monolith","timestamp":"2025-06-29T21:40:34.521Z"}
+{"level":"info","message":"SIGINT received, shutting down gracefully","service":"flowforge-monolith","timestamp":"2025-06-29T21:40:34.527Z"}
+{"level":"info","message":"SIGINT received, shutting down gracefully","service":"flowforge-monolith","timestamp":"2025-06-29T21:40:34.528Z"}
+{"level":"info","message":"SIGINT received, shutting down gracefully","service":"flowforge-monolith","timestamp":"2025-06-29T21:40:34.528Z"}
