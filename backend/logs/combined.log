@@ -75,3 +75,12 @@
 {"level":"info","message":"Workflow database tables initialized successfully","service":"flowforge-monolith","timestamp":"2025-06-29T20:59:42.483Z"}
 {"level":"info","message":"Execution database tables initialized successfully","service":"flowforge-monolith","timestamp":"2025-06-29T20:59:42.533Z"}
 {"level":"info","message":"All database tables initialized successfully","service":"flowforge-monolith","timestamp":"2025-06-29T20:59:42.534Z"}
+{"level":"info","message":"Auth database tables initialized successfully","service":"flowforge-monolith","timestamp":"2025-06-29T21:00:11.989Z"}
+{"level":"info","message":"Workflow database tables initialized successfully","service":"flowforge-monolith","timestamp":"2025-06-29T21:00:12.041Z"}
+{"level":"info","message":"Execution database tables initialized successfully","service":"flowforge-monolith","timestamp":"2025-06-29T21:00:12.091Z"}
+{"level":"info","message":"All database tables initialized successfully","service":"flowforge-monolith","timestamp":"2025-06-29T21:00:12.092Z"}
+{"level":"info","message":"Connected to SQLite database","path":"./backend/data/auth.db","service":"flowforge-monolith","timestamp":"2025-06-29T21:00:12.094Z"}
+{"level":"info","message":"Connected to SQLite database","path":"./backend/data/workflow.db","service":"flowforge-monolith","timestamp":"2025-06-29T21:00:12.095Z"}
+{"level":"info","message":"Connected to SQLite database","path":"./backend/data/execution.db","service":"flowforge-monolith","timestamp":"2025-06-29T21:00:12.096Z"}
+{"level":"info","message":"Connected to all databases","service":"flowforge-monolith","timestamp":"2025-06-29T21:00:12.097Z"}
+{"level":"info","message":"Monolithic backend running on port 3000","service":"flowforge-monolith","timestamp":"2025-06-29T21:00:12.100Z"}
