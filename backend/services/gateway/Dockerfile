@@ -1,6 +1,6 @@
 FROM node:18-alpine
 
-# Install findutils to make 'find' command available
+# Install findutils to make 'find\' command available
 RUN apk add --no-cache findutils
 
 WORKDIR /app
