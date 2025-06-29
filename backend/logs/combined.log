@@ -117,3 +117,4 @@
 {"level":"info","message":"All database tables initialized successfully","service":"flowforge-monolith","timestamp":"2025-06-29T21:08:41.790Z"}
 {"level":"info","message":"Connected to all databases","service":"flowforge-monolith","timestamp":"2025-06-29T21:08:41.792Z"}
 {"level":"info","message":"Monolithic backend running on port 3000","service":"flowforge-monolith","timestamp":"2025-06-29T21:08:41.795Z"}
+{"level":"info","message":"SIGINT received, shutting down gracefully","service":"flowforge-monolith","timestamp":"2025-06-29T21:09:34.065Z"}
