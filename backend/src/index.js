@@ -4,6 +4,7 @@ const helmet = require('helmet');
 const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
 const { initializeDatabase } = require('./utils/initDatabase');
+const { Database } = require('./utils/database');
 const logger = require('./utils/logger');
 const errorHandler = require('./middleware/errorHandler');
 
@@ -89,10 +90,10 @@ async function startServer() {
     // Initialize database tables and get open database instances
     const { authDb, workflowDb, executionDb } = await initializeDatabase();
     
-    // Make database instances available to all routes
-    app.locals.authDb = authDb;
-    app.locals.workflowDb = workflowDb;
-    app.locals.executionDb = executionDb;
+    // Wrap database instances with the Database class for consistent API
+    app.locals.authDb = new Database(authDb);
+    app.locals.workflowDb = new Database(workflowDb);
+    app.locals.executionDb = new Database(executionDb);
 
     // Initialize Redis (optional - gracefully handle failure)
     try {
@@ -134,9 +135,9 @@ startServer();
 process.on('SIGTERM', async () => {
   logger.info('SIGTERM received, shutting down gracefully');
   try {
-    if (app.locals.authDb) await app.locals.authDb.close();
-    if (app.locals.workflowDb) await app.locals.workflowDb.close();
-    if (app.locals.executionDb) await app.locals.executionDb.close();
+    if (app.locals.authDb && app.locals.authDb.close) await app.locals.authDb.close();
+    if (app.locals.workflowDb && app.locals.workflowDb.close) await app.locals.workflowDb.close();
+    if (app.locals.executionDb && app.locals.executionDb.close) await app.locals.executionDb.close();
     if (app.locals.redis && app.locals.redis.close) await app.locals.redis.close();
   } catch (error) {
     logger.error('Error closing connections:', error);
@@ -147,9 +148,9 @@ process.on('SIGTERM', async () => {
 process.on('SIGINT', async () => {
   logger.info('SIGINT received, shutting down gracefully');
   try {
-    if (app.locals.authDb) await app.locals.authDb.close();
-    if (app.locals.workflowDb) await app.locals.workflowDb.close();
-    if (app.locals.executionDb) await app.locals.executionDb.close();
+    if (app.locals.authDb && app.locals.authDb.close) await app.locals.authDb.close();
+    if (app.locals.workflowDb && app.locals.workflowDb.close) await app.locals.workflowDb.close();
+    if (app.locals.executionDb && app.locals.executionDb.close) await app.locals.executionDb.close();
     if (app.locals.redis && app.locals.redis.close) await app.locals.redis.close();
   } catch (error) {
     logger.error('Error closing connections:', error);

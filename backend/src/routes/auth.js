@@ -57,8 +57,8 @@ router.post('/register', validateBody(registerSchema), async (req, res) => {
     }
 
     // Check if user already exists
-    const existingUser = await authDb.get('SELECT id FROM users WHERE email = ?', [email]);
-    if (existingUser) {
+    const existingUserResult = await authDb.query('SELECT id FROM users WHERE email = ?', [email]);
+    if (existingUserResult.rows.length > 0) {
       return res.status(400).json({ success: false, error: 'User already exists' });
     }
 
@@ -67,18 +67,23 @@ router.post('/register', validateBody(registerSchema), async (req, res) => {
 
     // Create user
     const userId = uuidv4();
-    await authDb.run(
+    await authDb.query(
       `INSERT INTO users (id, email, password, name, role, created_at, updated_at) 
        VALUES (?, ?, ?, ?, ?, datetime('now'), datetime('now'))`,
       [userId, email, hashedPassword, name, role]
     );
 
     // Get the created user
-    const user = await authDb.get(
+    const userResult = await authDb.query(
       'SELECT id, email, name, role, created_at FROM users WHERE id = ?',
       [userId]
     );
     
+    if (userResult.rows.length === 0) {
+      throw new Error('Failed to create user');
+    }
+
+    const user = userResult.rows[0];
     const tokens = generateTokens(user);
 
     // Store refresh token in Redis if available
@@ -124,14 +129,16 @@ router.post('/login', validateBody(loginSchema), async (req, res) => {
     }
 
     // Find user
-    const user = await authDb.get(
+    const userResult = await authDb.query(
       'SELECT id, email, password, name, role, created_at FROM users WHERE email = ?',
       [email]
     );
 
-    if (!user) {
+    if (userResult.rows.length === 0) {
       return res.status(401).json({ success: false, error: 'Invalid credentials' });
     }
+
+    const user = userResult.rows[0];
 
     // Verify password
     const isValidPassword = await bcrypt.compare(password, user.password);
@@ -153,7 +160,7 @@ router.post('/login', validateBody(loginSchema), async (req, res) => {
     }
 
     // Update last login
-    await authDb.run('UPDATE users SET last_login = datetime(\'now\') WHERE id = ?', [user.id]);
+    await authDb.query('UPDATE users SET last_login = datetime(\'now\') WHERE id = ?', [user.id]);
 
     logger.info('User logged in successfully', { userId: user.id, email });
 
@@ -199,15 +206,16 @@ router.post('/refresh', validateBody(refreshTokenSchema), async (req, res) => {
     }
 
     // Get user
-    const user = await authDb.get(
+    const userResult = await authDb.query(
       'SELECT id, email, name, role FROM users WHERE id = ?',
       [decoded.userId]
     );
 
-    if (!user) {
+    if (userResult.rows.length === 0) {
       return res.status(401).json({ success: false, error: 'User not found' });
     }
 
+    const user = userResult.rows[0];
     const tokens = generateTokens(user);
 
     // Update refresh token in Redis if available
@@ -259,14 +267,16 @@ router.get('/me', authenticateToken, async (req, res) => {
     const userId = req.user.userId;
     const authDb = req.app.locals.authDb;
 
-    const user = await authDb.get(
+    const userResult = await authDb.query(
       'SELECT id, email, name, role, avatar, created_at, last_login FROM users WHERE id = ?',
       [userId]
     );
 
-    if (!user) {
+    if (userResult.rows.length === 0) {
       return res.status(404).json({ success: false, error: 'User not found' });
     }
+
+    const user = userResult.rows[0];
 
     res.json({
       success: true,
