@@ -387,3 +387,5 @@
 {"level":"info","message":"Redis client initialized","service":"flowforge-monolith","timestamp":"2025-06-29T21:40:39.750Z"}
 {"level":"info","message":"Connected to all databases","service":"flowforge-monolith","timestamp":"2025-06-29T21:40:39.750Z"}
 {"level":"info","message":"Monolithic backend running on port 3000","service":"flowforge-monolith","timestamp":"2025-06-29T21:40:39.753Z"}
+{"level":"info","message":"User logged out successfully","service":"flowforge-monolith","timestamp":"2025-06-29T21:40:44.861Z","userId":"4a6210a1-70c1-4c5e-be18-a91064e15e7f"}
+{"level":"info","message":"127.0.0.1 - - [29/Jun/2025:21:40:44 +0000] \"POST /api/auth/logout HTTP/1.1\" 200 52 \"https://localhost:5173/\" \"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36\"","service":"flowforge-monolith","timestamp":"2025-06-29T21:40:44.865Z"}
