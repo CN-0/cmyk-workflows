@@ -17,7 +17,7 @@ const LoginForm = () => {
     try {
       await login(email, password);
     } catch (err) {
-      setError('Invalid email or password');
+      setError(err.message || 'Invalid email or password');
     }
   };
 
@@ -37,6 +37,15 @@ const LoginForm = () => {
           <div className="text-center mb-8">
             <h2 className="text-3xl font-bold text-gray-900 mb-2">Welcome back</h2>
             <p className="text-gray-600">Sign in to your account to continue</p>
+          </div>
+
+          {/* Demo Credentials */}
+          <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <h4 className="text-sm font-medium text-blue-800 mb-2">Demo Credentials</h4>
+            <div className="text-xs text-blue-700 space-y-1">
+              <p><strong>Email:</strong> admin@flowforge.com</p>
+              <p><strong>Password:</strong> admin123</p>
+            </div>
           </div>
 
           {/* Form */}

@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { WorkflowProvider } from './contexts/WorkflowContext';
 import LoginForm from './components/Auth/LoginForm';
+import RegisterForm from './components/Auth/RegisterForm';
 import Dashboard from './pages/Dashboard';
 import Workflows from './pages/Workflows';
 import WorkflowBuilder from './pages/WorkflowBuilder';
@@ -33,6 +34,10 @@ const AppRoutes = () => {
       <Route 
         path="/login" 
         element={user ? <Navigate to="/" /> : <LoginForm />} 
+      />
+      <Route 
+        path="/register" 
+        element={user ? <Navigate to="/" /> : <RegisterForm />} 
       />
       <Route 
         path="/" 
