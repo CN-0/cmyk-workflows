@@ -46,7 +46,6 @@ async function initializeDatabase() {
     await authDb.exec('COMMIT');
 
     logger.info('Auth database tables initialized successfully');
-    await authDb.close();
 
     // Initialize workflow database
     const workflowDb = await open({
@@ -93,7 +92,6 @@ async function initializeDatabase() {
     await workflowDb.exec('COMMIT');
 
     logger.info('Workflow database tables initialized successfully');
-    await workflowDb.close();
 
     // Initialize execution database
     const executionDb = await open({
@@ -144,9 +142,15 @@ async function initializeDatabase() {
     await executionDb.exec('COMMIT');
 
     logger.info('Execution database tables initialized successfully');
-    await executionDb.close();
 
     logger.info('All database tables initialized successfully');
+
+    // Return the open database instances
+    return {
+      authDb,
+      workflowDb,
+      executionDb
+    };
   } catch (error) {
     logger.error('Database initialization failed:', error);
     throw error;

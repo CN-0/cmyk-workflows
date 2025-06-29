@@ -4,13 +4,25 @@ const path = require('path');
 const logger = require('./logger');
 
 class Database {
-  constructor(dbPath) {
-    this.dbPath = dbPath;
-    this.db = null;
+  constructor(dbPathOrInstance) {
+    if (typeof dbPathOrInstance === 'string') {
+      // Legacy constructor with path
+      this.dbPath = dbPathOrInstance;
+      this.db = null;
+    } else {
+      // New constructor with existing database instance
+      this.db = dbPathOrInstance;
+      this.dbPath = null;
+    }
   }
 
   async connect() {
     try {
+      if (this.db) {
+        // Already have a database instance
+        return this.db;
+      }
+
       // Ensure directory exists
       const dir = path.dirname(this.dbPath);
       const fs = require('fs');

@@ -36,35 +36,6 @@ app.use(limiter);
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
-// Initialize database connections
-async function connectToAllDatabases() {
-  try {
-    // Initialize auth database
-    const authDb = new Database('./backend/data/auth.db');
-    await authDb.connect();
-    app.locals.authDb = authDb;
-
-    // Initialize workflow database
-    const workflowDb = new Database('./backend/data/workflow.db');
-    await workflowDb.connect();
-    app.locals.workflowDb = workflowDb;
-
-    // Initialize execution database
-    const executionDb = new Database('./backend/data/execution.db');
-    await executionDb.connect();
-    app.locals.executionDb = executionDb;
-
-    // Initialize Redis (optional)
-    const redis = new RedisClient(process.env.REDIS_URL || 'redis://localhost:6379');
-    app.locals.redis = redis;
-
-    logger.info('Connected to all databases');
-  } catch (error) {
-    logger.error('Failed to connect to databases:', error);
-    throw error;
-  }
-}
-
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
@@ -83,11 +54,23 @@ app.use(errorHandler);
 // Initialize databases and start server
 async function startServer() {
   try {
-    // Initialize database tables first
-    await initializeDatabase();
+    // Initialize database tables and get open database instances
+    const { authDb, workflowDb, executionDb } = await initializeDatabase();
     
-    // Connect to databases
-    await connectToAllDatabases();
+    // Create Database wrapper instances with the open database connections
+    app.locals.authDb = new Database(authDb);
+    app.locals.workflowDb = new Database(workflowDb);
+    app.locals.executionDb = new Database(executionDb);
+
+    // Initialize Redis (optional)
+    try {
+      const redis = new RedisClient(process.env.REDIS_URL || 'redis://localhost:6379');
+      app.locals.redis = redis;
+    } catch (redisError) {
+      logger.warn('Redis connection failed, continuing without Redis:', redisError);
+    }
+
+    logger.info('Connected to all databases');
     
     app.listen(PORT, () => {
       logger.info(`Monolithic backend running on port ${PORT}`);
@@ -101,12 +84,26 @@ async function startServer() {
 startServer();
 
 // Graceful shutdown
-process.on('SIGTERM', () => {
+process.on('SIGTERM', async () => {
   logger.info('SIGTERM received, shutting down gracefully');
+  try {
+    if (app.locals.authDb) await app.locals.authDb.close();
+    if (app.locals.workflowDb) await app.locals.workflowDb.close();
+    if (app.locals.executionDb) await app.locals.executionDb.close();
+  } catch (error) {
+    logger.error('Error closing database connections:', error);
+  }
   process.exit(0);
 });
 
-process.on('SIGINT', () => {
+process.on('SIGINT', async () => {
   logger.info('SIGINT received, shutting down gracefully');
+  try {
+    if (app.locals.authDb) await app.locals.authDb.close();
+    if (app.locals.workflowDb) await app.locals.workflowDb.close();
+    if (app.locals.executionDb) await app.locals.executionDb.close();
+  } catch (error) {
+    logger.error('Error closing database connections:', error);
+  }
   process.exit(0);
 });
