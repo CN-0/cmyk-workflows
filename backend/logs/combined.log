@@ -238,3 +238,6 @@
 {"level":"info","message":"Monolithic backend running on port 3000","service":"flowforge-monolith","timestamp":"2025-06-29T21:31:46.439Z"}
 {"level":"error","message":"Registration error Assignment to constant variable.","service":"flowforge-monolith","stack":"TypeError: Assignment to constant variable.\n    at eval (file:///home/project/backend/src/routes/auth.js#cjs:73:10)","timestamp":"2025-06-29T21:31:50.323Z"}
 {"level":"info","message":"127.0.0.1 - - [29/Jun/2025:21:31:50 +0000] \"POST /api/auth/register HTTP/1.1\" 500 47 \"https://localhost:5173/\" \"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36\"","service":"flowforge-monolith","timestamp":"2025-06-29T21:31:50.327Z"}
+{"level":"info","message":"SIGINT received, shutting down gracefully","service":"flowforge-monolith","timestamp":"2025-06-29T21:32:25.052Z"}
+{"level":"info","message":"SIGINT received, shutting down gracefully","service":"flowforge-monolith","timestamp":"2025-06-29T21:32:25.053Z"}
+{"level":"info","message":"SIGINT received, shutting down gracefully","service":"flowforge-monolith","timestamp":"2025-06-29T21:32:25.054Z"}
