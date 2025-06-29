@@ -56,6 +56,7 @@ async function startServer() {
   try {
     // Initialize database tables and get open database instances
     const { authDb, workflowDb, executionDb } = await initializeDatabase();
+    console.log(authDb)
     
     // Create Database wrapper instances with the open database connections
     app.locals.authDb = new Database(authDb);
