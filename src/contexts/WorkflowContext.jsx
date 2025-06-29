@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import apiService from '../services/api';
 import { nodeTemplates } from '../data/nodeTemplates';
+import { useAuth } from './AuthContext';
 
 const WorkflowContext = createContext(undefined);
 
@@ -16,6 +17,7 @@ export const WorkflowProvider = ({ children }) => {
   const [workflows, setWorkflows] = useState([]);
   const [executions, setExecutions] = useState([]);
   const [loading, setLoading] = useState(false);
+  const { user, loading: authLoading } = useAuth();
 
   const loadWorkflows = async () => {
     setLoading(true);
@@ -43,9 +45,12 @@ export const WorkflowProvider = ({ children }) => {
   };
 
   useEffect(() => {
-    loadWorkflows();
-    loadExecutions();
-  }, []);
+    // Only load data when user is authenticated and auth loading is complete
+    if (user && !authLoading) {
+      loadWorkflows();
+      loadExecutions();
+    }
+  }, [user, authLoading]);
 
   const createWorkflow = async (workflowData) => {
     try {
