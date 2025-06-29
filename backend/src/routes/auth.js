@@ -48,7 +48,7 @@ const generateTokens = (user) => {
 // Register
 router.post('/register', validateBody(registerSchema), async (req, res) => {
   try {
-    const { email, password, name, role } = req.body;
+    const { email, password, name, role='viewer' } = req.body;
     const authDb = req.app.locals.authDb;
 
     console.log("tttt------------------------------------")
@@ -70,7 +70,6 @@ router.post('/register', validateBody(registerSchema), async (req, res) => {
 
     // Create user
     const userId = uuidv4();
-    role = 'viewer'
     console.log(userId, email, hashedPassword, name, role)
     await authDb.query(
       `INSERT INTO users (id, email, password, name, role, created_at, updated_at) 
