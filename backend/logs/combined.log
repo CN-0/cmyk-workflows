@@ -163,3 +163,6 @@
 {"level":"info","message":"Redis client initialized","service":"flowforge-monolith","timestamp":"2025-06-29T21:24:05.623Z"}
 {"level":"info","message":"Connected to all databases","service":"flowforge-monolith","timestamp":"2025-06-29T21:24:05.623Z"}
 {"level":"info","message":"Monolithic backend running on port 3000","service":"flowforge-monolith","timestamp":"2025-06-29T21:24:05.627Z"}
+{"level":"info","message":"SIGINT received, shutting down gracefully","service":"flowforge-monolith","timestamp":"2025-06-29T21:24:10.036Z"}
+{"level":"info","message":"SIGINT received, shutting down gracefully","service":"flowforge-monolith","timestamp":"2025-06-29T21:24:10.037Z"}
+{"level":"info","message":"SIGINT received, shutting down gracefully","service":"flowforge-monolith","timestamp":"2025-06-29T21:24:10.038Z"}
