@@ -56,3 +56,8 @@
 {"level":"info","message":"Connected to SQLite database","path":"/home/project/backend/data/execution.db","service":"flowforge-monolith","timestamp":"2025-06-29T20:45:56.457Z"}
 {"level":"info","message":"Connected to all databases","service":"flowforge-monolith","timestamp":"2025-06-29T20:45:56.457Z"}
 {"level":"info","message":"Monolithic backend running on port 3000","service":"flowforge-monolith","timestamp":"2025-06-29T20:45:56.460Z"}
+{"level":"info","message":"Connected to SQLite database","path":"/home/project/backend/data/auth.db","service":"flowforge-monolith","timestamp":"2025-06-29T20:49:35.739Z"}
+{"level":"info","message":"Connected to SQLite database","path":"/home/project/backend/data/workflow.db","service":"flowforge-monolith","timestamp":"2025-06-29T20:49:35.741Z"}
+{"level":"info","message":"Connected to SQLite database","path":"/home/project/backend/data/execution.db","service":"flowforge-monolith","timestamp":"2025-06-29T20:49:35.743Z"}
+{"level":"info","message":"Connected to all databases","service":"flowforge-monolith","timestamp":"2025-06-29T20:49:35.743Z"}
+{"level":"info","message":"Monolithic backend running on port 3000","service":"flowforge-monolith","timestamp":"2025-06-29T20:49:35.745Z"}
