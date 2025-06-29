@@ -2,8 +2,6 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
-const { Database } = require('./utils/database');
-const { RedisClient } = require('./utils/redis');
 const { initializeDatabase } = require('./utils/initDatabase');
 const logger = require('./utils/logger');
 const errorHandler = require('./middleware/errorHandler');
@@ -36,17 +34,17 @@ app.use(limiter);
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'OK', timestamp: new Date().toISOString() });
+});
+
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/workflows', workflowRoutes);
 app.use('/api/templates', templateRoutes);
 app.use('/api/executions', executionRoutes);
-
-// Health check endpoint
-app.get('/health', (req, res) => {
-  res.status(200).json({ status: 'OK', timestamp: new Date().toISOString() });
-});
 
 // Error handling middleware
 app.use(errorHandler);
@@ -56,19 +54,28 @@ async function startServer() {
   try {
     // Initialize database tables and get open database instances
     const { authDb, workflowDb, executionDb } = await initializeDatabase();
-    console.log(authDb)
     
-    // Create Database wrapper instances with the open database connections
-    app.locals.authDb = new Database(authDb);
-    app.locals.workflowDb = new Database(workflowDb);
-    app.locals.executionDb = new Database(executionDb);
+    // Make database instances available to all routes
+    app.locals.authDb = authDb;
+    app.locals.workflowDb = workflowDb;
+    app.locals.executionDb = executionDb;
 
-    // Initialize Redis (optional)
+    // Initialize Redis (optional - gracefully handle failure)
     try {
+      const { RedisClient } = require('./utils/redis');
       const redis = new RedisClient(process.env.REDIS_URL || 'redis://localhost:6379');
       app.locals.redis = redis;
+      logger.info('Redis client initialized');
     } catch (redisError) {
-      logger.warn('Redis connection failed, continuing without Redis:', redisError);
+      logger.warn('Redis connection failed, continuing without Redis:', redisError.message);
+      // Create a mock redis client that does nothing
+      app.locals.redis = {
+        get: async () => null,
+        set: async () => {},
+        del: async () => {},
+        exists: async () => false,
+        isConnected: () => false
+      };
     }
 
     logger.info('Connected to all databases');
@@ -91,8 +98,9 @@ process.on('SIGTERM', async () => {
     if (app.locals.authDb) await app.locals.authDb.close();
     if (app.locals.workflowDb) await app.locals.workflowDb.close();
     if (app.locals.executionDb) await app.locals.executionDb.close();
+    if (app.locals.redis && app.locals.redis.close) await app.locals.redis.close();
   } catch (error) {
-    logger.error('Error closing database connections:', error);
+    logger.error('Error closing connections:', error);
   }
   process.exit(0);
 });
@@ -103,8 +111,9 @@ process.on('SIGINT', async () => {
     if (app.locals.authDb) await app.locals.authDb.close();
     if (app.locals.workflowDb) await app.locals.workflowDb.close();
     if (app.locals.executionDb) await app.locals.executionDb.close();
+    if (app.locals.redis && app.locals.redis.close) await app.locals.redis.close();
   } catch (error) {
-    logger.error('Error closing database connections:', error);
+    logger.error('Error closing connections:', error);
   }
   process.exit(0);
 });

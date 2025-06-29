@@ -49,11 +49,16 @@ const generateTokens = (user) => {
 router.post('/register', validateBody(registerSchema), async (req, res) => {
   try {
     const { email, password, name, role } = req.body;
-    const db = req.app.locals.authDb;
+    const authDb = req.app.locals.authDb;
+
+    if (!authDb) {
+      logger.error('Auth database not available');
+      return res.status(500).json({ success: false, error: 'Database not available' });
+    }
 
     // Check if user already exists
-    const existingUser = await db.query('SELECT id FROM users WHERE email = ?', [email]);
-    if (existingUser.rows.length > 0) {
+    const existingUser = await authDb.get('SELECT id FROM users WHERE email = ?', [email]);
+    if (existingUser) {
       return res.status(400).json({ success: false, error: 'User already exists' });
     }
 
@@ -62,27 +67,28 @@ router.post('/register', validateBody(registerSchema), async (req, res) => {
 
     // Create user
     const userId = uuidv4();
-    await db.query(
+    await authDb.run(
       `INSERT INTO users (id, email, password, name, role, created_at, updated_at) 
        VALUES (?, ?, ?, ?, ?, datetime('now'), datetime('now'))`,
       [userId, email, hashedPassword, name, role]
     );
 
     // Get the created user
-    const userResult = await db.query(
+    const user = await authDb.get(
       'SELECT id, email, name, role, created_at FROM users WHERE id = ?',
       [userId]
     );
     
-    const user = userResult.rows[0];
     const tokens = generateTokens(user);
 
-    // Store refresh token in Redis
+    // Store refresh token in Redis if available
     const redis = req.app.locals.redis;
-    try {
-      await redis.set(`refresh_token:${user.id}`, tokens.refreshToken, 7 * 24 * 60 * 60); // 7 days
-    } catch (redisError) {
-      logger.warn('Redis not available for token storage', redisError);
+    if (redis && redis.isConnected && redis.isConnected()) {
+      try {
+        await redis.set(`refresh_token:${user.id}`, tokens.refreshToken, 7 * 24 * 60 * 60); // 7 days
+      } catch (redisError) {
+        logger.warn('Redis not available for token storage', redisError);
+      }
     }
 
     logger.info('User registered successfully', { userId: user.id, email });
@@ -110,19 +116,22 @@ router.post('/register', validateBody(registerSchema), async (req, res) => {
 router.post('/login', validateBody(loginSchema), async (req, res) => {
   try {
     const { email, password } = req.body;
-    const db = req.app.locals.authDb;
+    const authDb = req.app.locals.authDb;
+
+    if (!authDb) {
+      logger.error('Auth database not available');
+      return res.status(500).json({ success: false, error: 'Database not available' });
+    }
 
     // Find user
-    const result = await db.query(
+    const user = await authDb.get(
       'SELECT id, email, password, name, role, created_at FROM users WHERE email = ?',
       [email]
     );
 
-    if (result.rows.length === 0) {
+    if (!user) {
       return res.status(401).json({ success: false, error: 'Invalid credentials' });
     }
-
-    const user = result.rows[0];
 
     // Verify password
     const isValidPassword = await bcrypt.compare(password, user.password);
@@ -133,16 +142,18 @@ router.post('/login', validateBody(loginSchema), async (req, res) => {
     // Generate tokens
     const tokens = generateTokens(user);
 
-    // Store refresh token in Redis
+    // Store refresh token in Redis if available
     const redis = req.app.locals.redis;
-    try {
-      await redis.set(`refresh_token:${user.id}`, tokens.refreshToken, 7 * 24 * 60 * 60);
-    } catch (redisError) {
-      logger.warn('Redis not available for token storage', redisError);
+    if (redis && redis.isConnected && redis.isConnected()) {
+      try {
+        await redis.set(`refresh_token:${user.id}`, tokens.refreshToken, 7 * 24 * 60 * 60);
+      } catch (redisError) {
+        logger.warn('Redis not available for token storage', redisError);
+      }
     }
 
     // Update last login
-    await db.query('UPDATE users SET last_login = datetime(\'now\') WHERE id = ?', [user.id]);
+    await authDb.run('UPDATE users SET last_login = datetime(\'now\') WHERE id = ?', [user.id]);
 
     logger.info('User logged in successfully', { userId: user.id, email });
 
@@ -169,40 +180,43 @@ router.post('/login', validateBody(loginSchema), async (req, res) => {
 router.post('/refresh', validateBody(refreshTokenSchema), async (req, res) => {
   try {
     const { refreshToken } = req.body;
-    const db = req.app.locals.authDb;
+    const authDb = req.app.locals.authDb;
     const redis = req.app.locals.redis;
 
     // Verify refresh token
     const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET || 'your-super-secret-refresh-key-change-in-production');
 
-    // Check if refresh token exists in Redis
-    try {
-      const storedToken = await redis.get(`refresh_token:${decoded.userId}`);
-      if (!storedToken || storedToken !== refreshToken) {
-        return res.status(401).json({ success: false, error: 'Invalid refresh token' });
+    // Check if refresh token exists in Redis (if Redis is available)
+    if (redis && redis.isConnected && redis.isConnected()) {
+      try {
+        const storedToken = await redis.get(`refresh_token:${decoded.userId}`);
+        if (!storedToken || storedToken !== refreshToken) {
+          return res.status(401).json({ success: false, error: 'Invalid refresh token' });
+        }
+      } catch (redisError) {
+        logger.warn('Redis not available for token verification', redisError);
       }
-    } catch (redisError) {
-      logger.warn('Redis not available for token verification', redisError);
     }
 
     // Get user
-    const result = await db.query(
+    const user = await authDb.get(
       'SELECT id, email, name, role FROM users WHERE id = ?',
       [decoded.userId]
     );
 
-    if (result.rows.length === 0) {
+    if (!user) {
       return res.status(401).json({ success: false, error: 'User not found' });
     }
 
-    const user = result.rows[0];
     const tokens = generateTokens(user);
 
-    // Update refresh token in Redis
-    try {
-      await redis.set(`refresh_token:${user.id}`, tokens.refreshToken, 7 * 24 * 60 * 60);
-    } catch (redisError) {
-      logger.warn('Redis not available for token update', redisError);
+    // Update refresh token in Redis if available
+    if (redis && redis.isConnected && redis.isConnected()) {
+      try {
+        await redis.set(`refresh_token:${user.id}`, tokens.refreshToken, 7 * 24 * 60 * 60);
+      } catch (redisError) {
+        logger.warn('Redis not available for token update', redisError);
+      }
     }
 
     res.json({
@@ -221,11 +235,13 @@ router.post('/logout', authenticateToken, async (req, res) => {
     const userId = req.user.userId;
     const redis = req.app.locals.redis;
 
-    // Remove refresh token from Redis
-    try {
-      await redis.del(`refresh_token:${userId}`);
-    } catch (redisError) {
-      logger.warn('Redis not available for token removal', redisError);
+    // Remove refresh token from Redis if available
+    if (redis && redis.isConnected && redis.isConnected()) {
+      try {
+        await redis.del(`refresh_token:${userId}`);
+      } catch (redisError) {
+        logger.warn('Redis not available for token removal', redisError);
+      }
     }
 
     logger.info('User logged out successfully', { userId });
@@ -241,18 +257,16 @@ router.post('/logout', authenticateToken, async (req, res) => {
 router.get('/me', authenticateToken, async (req, res) => {
   try {
     const userId = req.user.userId;
-    const db = req.app.locals.authDb;
+    const authDb = req.app.locals.authDb;
 
-    const result = await db.query(
+    const user = await authDb.get(
       'SELECT id, email, name, role, avatar, created_at, last_login FROM users WHERE id = ?',
       [userId]
     );
 
-    if (result.rows.length === 0) {
+    if (!user) {
       return res.status(404).json({ success: false, error: 'User not found' });
     }
-
-    const user = result.rows[0];
 
     res.json({
       success: true,

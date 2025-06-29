@@ -5,6 +5,7 @@ class RedisClient {
   constructor(url) {
     this.connected = false;
     this.client = null;
+    this.errorLogged = false;
     
     try {
       this.client = new Redis(url, {
@@ -41,8 +42,7 @@ class RedisClient {
   }
 
   async get(key) {
-    if (!this.connected) {
-      logger.warn('Redis not connected, skipping GET operation');
+    if (!this.connected || !this.client) {
       return null;
     }
     
@@ -55,8 +55,7 @@ class RedisClient {
   }
 
   async set(key, value, ttl) {
-    if (!this.connected) {
-      logger.warn('Redis not connected, skipping SET operation');
+    if (!this.connected || !this.client) {
       return;
     }
     
@@ -72,8 +71,7 @@ class RedisClient {
   }
 
   async del(key) {
-    if (!this.connected) {
-      logger.warn('Redis not connected, skipping DEL operation');
+    if (!this.connected || !this.client) {
       return;
     }
     
@@ -85,8 +83,7 @@ class RedisClient {
   }
 
   async exists(key) {
-    if (!this.connected) {
-      logger.warn('Redis not connected, skipping EXISTS operation');
+    if (!this.connected || !this.client) {
       return false;
     }
     
@@ -100,8 +97,7 @@ class RedisClient {
   }
 
   async publish(channel, message) {
-    if (!this.connected) {
-      logger.warn('Redis not connected, skipping PUBLISH operation');
+    if (!this.connected || !this.client) {
       return;
     }
     
@@ -113,8 +109,7 @@ class RedisClient {
   }
 
   async subscribe(channel, callback) {
-    if (!this.connected) {
-      logger.warn('Redis not connected, skipping SUBSCRIBE operation');
+    if (!this.connected || !this.client) {
       return;
     }
     
