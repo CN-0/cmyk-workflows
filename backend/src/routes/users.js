@@ -60,7 +60,7 @@ router.put('/:id', authenticateToken, async (req, res) => {
     const { id } = req.params;
     const currentUserId = req.user.userId;
     const currentUserRole = req.user.role;
-    const { name, avatar } = req.body;
+    const { name, avatar, role } = req.body;
     const db = req.app.locals.authDb;
 
     // Users can only update their own profile unless they're admin
@@ -68,10 +68,43 @@ router.put('/:id', authenticateToken, async (req, res) => {
       return res.status(403).json({ success: false, error: 'Access denied' });
     }
 
-    const result = await db.query(
-      'UPDATE users SET name = ?, avatar = ?, updated_at = datetime(\'now\') WHERE id = ?',
-      [name, avatar, id]
-    );
+    // Only admins can update roles
+    if (role !== undefined && currentUserRole !== 'admin') {
+      return res.status(403).json({ success: false, error: 'Only admins can update user roles' });
+    }
+
+    // Build dynamic update query based on provided fields
+    const updateFields = [];
+    const updateValues = [];
+
+    if (name !== undefined) {
+      updateFields.push('name = ?');
+      updateValues.push(name);
+    }
+
+    if (avatar !== undefined) {
+      updateFields.push('avatar = ?');
+      updateValues.push(avatar || null); // Convert empty string or undefined to null
+    }
+
+    if (role !== undefined && currentUserRole === 'admin') {
+      updateFields.push('role = ?');
+      updateValues.push(role);
+    }
+
+    // Always update the updated_at timestamp
+    updateFields.push('updated_at = datetime(\'now\')');
+
+    if (updateFields.length === 1) { // Only updated_at field
+      return res.status(400).json({ success: false, error: 'No valid fields to update' });
+    }
+
+    // Add the WHERE clause parameter
+    updateValues.push(id);
+
+    const updateQuery = `UPDATE users SET ${updateFields.join(', ')} WHERE id = ?`;
+
+    const result = await db.query(updateQuery, updateValues);
 
     if (result.rowCount === 0) {
       return res.status(404).json({ success: false, error: 'User not found' });
