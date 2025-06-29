@@ -229,3 +229,10 @@
 {"level":"info","message":"127.0.0.1 - - [29/Jun/2025:21:31:32 +0000] \"POST /api/auth/register HTTP/1.1\" 500 47 \"https://localhost:5173/\" \"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36\"","service":"flowforge-monolith","timestamp":"2025-06-29T21:31:32.898Z"}
 {"level":"info","message":"SIGINT received, shutting down gracefully","service":"flowforge-monolith","timestamp":"2025-06-29T21:31:44.528Z"}
 {"level":"info","message":"SIGINT received, shutting down gracefully","service":"flowforge-monolith","timestamp":"2025-06-29T21:31:44.532Z"}
+{"level":"info","message":"Auth database initialized successfully","service":"flowforge-monolith","timestamp":"2025-06-29T21:31:46.315Z"}
+{"level":"info","message":"Workflow database initialized successfully","service":"flowforge-monolith","timestamp":"2025-06-29T21:31:46.354Z"}
+{"level":"info","message":"Execution database initialized successfully","service":"flowforge-monolith","timestamp":"2025-06-29T21:31:46.413Z"}
+{"level":"info","message":"All databases initialized successfully","service":"flowforge-monolith","timestamp":"2025-06-29T21:31:46.414Z"}
+{"level":"info","message":"Redis client initialized","service":"flowforge-monolith","timestamp":"2025-06-29T21:31:46.436Z"}
+{"level":"info","message":"Connected to all databases","service":"flowforge-monolith","timestamp":"2025-06-29T21:31:46.436Z"}
+{"level":"info","message":"Monolithic backend running on port 3000","service":"flowforge-monolith","timestamp":"2025-06-29T21:31:46.439Z"}
