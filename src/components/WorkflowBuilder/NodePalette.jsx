@@ -1,6 +1,62 @@
 import React from 'react';
 import * as LucideIcons from 'lucide-react';
+import { NodeTemplate } from '../../types/workflow';
 import { nodeTemplates } from '../../data/nodeTemplates';
+import { useDraggable } from '@dnd-kit/core';
+
+const DraggableNodeTemplate = ({ template }) => {
+  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+    id: `template-${template.id}`,
+    data: { 
+      type: 'template',
+      template: JSON.stringify(template)
+    }
+  });
+
+  const style = transform ? {
+    transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
+  } : undefined;
+
+  const IconComponent = LucideIcons[template.icon] || LucideIcons.Circle;
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      {...listeners}
+      {...attributes}
+      className={`p-3 border border-gray-200 rounded-lg hover:border-blue-300 hover:shadow-sm cursor-grab active:cursor-grabbing transition-all group ${
+        isDragging ? 'opacity-50' : ''
+      }`}
+      style={{ 
+        borderLeftColor: template.color, 
+        borderLeftWidth: '3px',
+        ...style
+      }}
+    >
+      <div className="flex items-start gap-3">
+        <div 
+          className="p-2 rounded-lg group-hover:scale-110 transition-transform"
+          style={{ backgroundColor: template.color + '20' }}
+        >
+          <IconComponent 
+            className="w-4 h-4" 
+            style={{ color: template.color }}
+          />
+        </div>
+        
+        <div className="flex-1 min-w-0">
+          <h5 className="text-sm font-medium text-gray-900 mb-1">
+            {template.name}
+          </h5>
+          <p className="text-xs text-gray-600 line-clamp-2">
+            {template.description}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const NodePalette = ({ onNodeSelect }) => {
   const categories = {
@@ -36,45 +92,12 @@ const NodePalette = ({ onNodeSelect }) => {
               </h4>
               
               <div className="space-y-2">
-                {templates.map((template) => {
-                  const IconComponent = LucideIcons[template.icon];
-                  
-                  return (
-                    <div
-                      key={template.id}
-                      draggable
-                      onDragStart={(e) => {
-                        e.dataTransfer.setData('application/json', JSON.stringify(template));
-                      }}
-                      onClick={() => onNodeSelect(template)}
-                      className="p-3 border border-gray-200 rounded-lg hover:border-blue-300 hover:shadow-sm cursor-pointer transition-all group"
-                      style={{ borderLeftColor: template.color, borderLeftWidth: '3px' }}
-                    >
-                      <div className="flex items-start gap-3">
-                        <div 
-                          className="p-2 rounded-lg group-hover:scale-110 transition-transform"
-                          style={{ backgroundColor: template.color + '20' }}
-                        >
-                          {IconComponent && (
-                            <IconComponent 
-                              className="w-4 h-4" 
-                              style={{ color: template.color }}
-                            />
-                          )}
-                        </div>
-                        
-                        <div className="flex-1 min-w-0">
-                          <h5 className="text-sm font-medium text-gray-900 mb-1">
-                            {template.name}
-                          </h5>
-                          <p className="text-xs text-gray-600 line-clamp-2">
-                            {template.description}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
+                {templates.map((template) => (
+                  <DraggableNodeTemplate
+                    key={template.id}
+                    template={template}
+                  />
+                ))}
               </div>
             </div>
           );
