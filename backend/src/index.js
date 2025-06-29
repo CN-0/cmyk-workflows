@@ -1,14 +1,11 @@
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
-const compression = require('compression');
-const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
-const dotenv = require('dotenv');
-const path = require('path');
-const { Database } = require('./utils/database');
-const { RedisClient } = require('./utils/redis');
+const { connectToAllDatabases } = require('./utils/database');
+const { initializeDatabase } = require('./utils/initDatabase');
 const logger = require('./utils/logger');
+const errorHandler = require('./middleware/errorHandler');
 
 // Import routes
 const authRoutes = require('./routes/auth');
@@ -17,31 +14,8 @@ const workflowRoutes = require('./routes/workflows');
 const templateRoutes = require('./routes/templates');
 const executionRoutes = require('./routes/executions');
 
-// Import middleware
-const { errorHandler } = require('./middleware/errorHandler');
-
-dotenv.config();
-
 const app = express();
 const PORT = process.env.PORT || 3000;
-
-// Initialize databases
-const authDbPath = process.env.AUTH_DATABASE_PATH || path.join(__dirname, '../data/auth.db');
-const workflowDbPath = process.env.WORKFLOW_DATABASE_PATH || path.join(__dirname, '../data/workflow.db');
-const executionDbPath = process.env.EXECUTION_DATABASE_PATH || path.join(__dirname, '../data/execution.db');
-
-const authDb = new Database(authDbPath);
-const workflowDb = new Database(workflowDbPath);
-const executionDb = new Database(executionDbPath);
-
-// Initialize Redis
-const redis = new RedisClient(process.env.REDIS_URL || 'redis://localhost:6379');
-
-// Make databases and redis available to routes
-app.locals.authDb = authDb;
-app.locals.workflowDb = workflowDb;
-app.locals.executionDb = executionDb;
-app.locals.redis = redis;
 
 // Security middleware
 app.use(helmet());
@@ -53,85 +27,56 @@ app.use(cors({
 // Rate limiting
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
-  message: 'Too many requests from this IP, please try again later.'
+  max: 100 // limit each IP to 100 requests per windowMs
 });
-app.use('/api', limiter);
+app.use(limiter);
 
-// Auth rate limiting
-const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // limit each IP to 5 requests per windowMs for auth
-  message: 'Too many authentication attempts, please try again later.'
-});
-
-// Middleware
-app.use(compression());
-app.use(morgan('combined'));
+// Body parsing middleware
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
-// Health check
-app.get('/health', (req, res) => {
-  res.json({ 
-    status: 'healthy', 
-    timestamp: new Date().toISOString(),
-    version: process.env.npm_package_version || '1.0.0'
-  });
-});
-
-// API Routes
-app.use('/api/auth', authLimiter, authRoutes);
+// Routes
+app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/workflows', workflowRoutes);
 app.use('/api/templates', templateRoutes);
 app.use('/api/executions', executionRoutes);
 
-// Webhook endpoint for external triggers (no auth required)
-app.post('/webhook/:workflowId', async (req, res) => {
-  try {
-    const { workflowId } = req.params;
-    const triggerData = req.body;
-
-    // TODO: Implement workflow triggering
-    const executionId = `exec-${Date.now()}`;
-
-    res.json({
-      success: true,
-      data: { executionId }
-    });
-  } catch (error) {
-    logger.error('Webhook trigger error', error);
-    res.status(500).json({ success: false, error: 'Failed to trigger workflow' });
-  }
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'OK', timestamp: new Date().toISOString() });
 });
 
-// Error handling
+// Error handling middleware
 app.use(errorHandler);
-
-// 404 handler
-app.use('*', (req, res) => {
-  res.status(404).json({ success: false, error: 'Route not found' });
-});
 
 // Initialize databases and start server
 async function startServer() {
   try {
-    await authDb.connect();
-    await workflowDb.connect();
-    await executionDb.connect();
+    // Initialize database tables first
+    await initializeDatabase();
     
-    logger.info('Connected to all databases');
+    // Connect to databases
+    await connectToAllDatabases();
     
     app.listen(PORT, () => {
       logger.info(`Monolithic backend running on port ${PORT}`);
     });
   } catch (error) {
-    logger.error('Failed to start server', error);
+    logger.error('Failed to start server:', error);
     process.exit(1);
   }
 }
 
 startServer();
 
-module.exports = app;
+// Graceful shutdown
+process.on('SIGTERM', () => {
+  logger.info('SIGTERM received, shutting down gracefully');
+  process.exit(0);
+});
+
+process.on('SIGINT', () => {
+  logger.info('SIGINT received, shutting down gracefully');
+  process.exit(0);
+});
