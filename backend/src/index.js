@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
+const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
 const { initializeDatabase } = require('./utils/initDatabase');
 const logger = require('./utils/logger');
@@ -22,6 +23,39 @@ app.use(cors({
   origin: process.env.FRONTEND_URL || 'http://localhost:5173',
   credentials: true
 }));
+
+// Request logging middleware
+app.use(morgan('combined', {
+  stream: {
+    write: (message) => {
+      // Log to console for terminal visibility
+      console.log(message.trim());
+      // Also log through winston
+      logger.info(message.trim());
+    }
+  }
+}));
+
+// Custom request logger for better visibility
+app.use((req, res, next) => {
+  const start = Date.now();
+  
+  // Log incoming request
+  console.log(`\n🔵 ${req.method} ${req.url}`);
+  console.log(`   Headers: ${JSON.stringify(req.headers, null, 2)}`);
+  if (req.body && Object.keys(req.body).length > 0) {
+    console.log(`   Body: ${JSON.stringify(req.body, null, 2)}`);
+  }
+  
+  // Log response when finished
+  res.on('finish', () => {
+    const duration = Date.now() - start;
+    const statusColor = res.statusCode >= 400 ? '🔴' : res.statusCode >= 300 ? '🟡' : '🟢';
+    console.log(`${statusColor} ${req.method} ${req.url} - ${res.statusCode} (${duration}ms)\n`);
+  });
+  
+  next();
+});
 
 // Rate limiting
 const limiter = rateLimit({
@@ -81,6 +115,11 @@ async function startServer() {
     logger.info('Connected to all databases');
     
     app.listen(PORT, () => {
+      console.log(`\n🚀 FlowForge Backend Server Started`);
+      console.log(`📍 Server running on: http://localhost:${PORT}`);
+      console.log(`🔍 Health check: http://localhost:${PORT}/health`);
+      console.log(`📊 API endpoints: http://localhost:${PORT}/api/*`);
+      console.log(`⚡ Request logging enabled - all requests will be shown below\n`);
       logger.info(`Monolithic backend running on port ${PORT}`);
     });
   } catch (error) {
