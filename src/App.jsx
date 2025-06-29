@@ -12,7 +12,7 @@ import Users from './pages/Users';
 import Templates from './pages/Templates';
 import Settings from './pages/Settings';
 
-const ProtectedRoute = ({ children }) => {
+const ProtectedRoute = ({ children, requiredRole }) => {
   const { user, loading } = useAuth();
 
   if (loading) {
@@ -23,7 +23,16 @@ const ProtectedRoute = ({ children }) => {
     );
   }
 
-  return user ? <>{children}</> : <Navigate to="/login" />;
+  if (!user) {
+    return <Navigate to="/login" />;
+  }
+
+  // Check if a specific role is required and user doesn't have it
+  if (requiredRole && user.role !== requiredRole) {
+    return <Navigate to="/" />;
+  }
+
+  return <>{children}</>;
 };
 
 const AppRoutes = () => {
@@ -82,7 +91,7 @@ const AppRoutes = () => {
       <Route 
         path="/users" 
         element={
-          <ProtectedRoute>
+          <ProtectedRoute requiredRole="admin">
             <Users />
           </ProtectedRoute>
         } 
