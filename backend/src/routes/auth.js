@@ -51,6 +51,7 @@ router.post('/register', validateBody(registerSchema), async (req, res) => {
     const { email, password, name, role } = req.body;
     const authDb = req.app.locals.authDb;
 
+    console.log("tttt------------------------------------")
     console.log(email,password)
 
     if (!authDb) {
