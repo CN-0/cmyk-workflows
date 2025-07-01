@@ -1,6 +1,5 @@
 import React from 'react';
 import * as LucideIcons from 'lucide-react';
-import { NodeTemplate } from '../../types/workflow';
 import { nodeTemplates } from '../../data/nodeTemplates';
 import { useDraggable } from '@dnd-kit/core';
 

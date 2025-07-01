@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import NodePalette from '../components/WorkflowBuilder/NodePalette';
 import WorkflowCanvas from '../components/WorkflowBuilder/WorkflowCanvas';
-import { WorkflowNode, NodeTemplate } from '../types/workflow';
 import { Save, Play, Settings, ArrowLeft, Zap } from 'lucide-react';
 import { useWorkflow } from '../contexts/WorkflowContext';
 

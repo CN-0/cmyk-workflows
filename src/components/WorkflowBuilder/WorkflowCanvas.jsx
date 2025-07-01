@@ -1,6 +1,5 @@
 import React, { useState, useCallback, useRef } from 'react';
 import { DndContext, DragEndEvent, useDraggable, useDroppable, DragOverlay } from '@dnd-kit/core';
-import { WorkflowNode, NodeTemplate } from '../../types/workflow';
 import * as LucideIcons from 'lucide-react';
 
 const NodeComponent = ({ node, onUpdate, onDelete, onConnect, isSelected, onSelect }) => {
