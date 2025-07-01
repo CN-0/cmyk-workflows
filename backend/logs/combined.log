@@ -450,3 +450,10 @@
 {"level":"info","message":"Redis client initialized","service":"flowforge-monolith","timestamp":"2025-06-29T21:52:44.063Z"}
 {"level":"info","message":"Connected to all databases","service":"flowforge-monolith","timestamp":"2025-06-29T21:52:44.063Z"}
 {"level":"info","message":"Monolithic backend running on port 3000","service":"flowforge-monolith","timestamp":"2025-06-29T21:52:44.066Z"}
+{"level":"info","message":"Auth database initialized successfully","service":"flowforge-monolith","timestamp":"2025-07-01T08:40:31.205Z"}
+{"level":"info","message":"Workflow database initialized successfully","service":"flowforge-monolith","timestamp":"2025-07-01T08:40:31.243Z"}
+{"level":"info","message":"Execution database initialized successfully","service":"flowforge-monolith","timestamp":"2025-07-01T08:40:31.303Z"}
+{"level":"info","message":"All databases initialized successfully","service":"flowforge-monolith","timestamp":"2025-07-01T08:40:31.303Z"}
+{"level":"info","message":"Redis client initialized","service":"flowforge-monolith","timestamp":"2025-07-01T08:40:31.322Z"}
+{"level":"info","message":"Connected to all databases","service":"flowforge-monolith","timestamp":"2025-07-01T08:40:31.322Z"}
+{"level":"info","message":"Monolithic backend running on port 3000","service":"flowforge-monolith","timestamp":"2025-07-01T08:40:31.325Z"}
