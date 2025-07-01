@@ -12,9 +12,11 @@ const DraggableNodeTemplate = ({ template }) => {
     }
   });
 
-  const style = transform ? {
-    transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
-  } : undefined;
+  const style = {
+    transform: transform ? `translate3d(${transform.x}px, ${transform.y}px, 0)` : undefined,
+    borderLeftColor: template.color, 
+    borderLeftWidth: '3px',
+  };
 
   const IconComponent = LucideIcons[template.icon] || LucideIcons.Circle;
 
@@ -27,11 +29,6 @@ const DraggableNodeTemplate = ({ template }) => {
       className={`p-3 border border-gray-200 rounded-lg hover:border-blue-300 hover:shadow-sm cursor-grab active:cursor-grabbing transition-all group ${
         isDragging ? 'opacity-50' : ''
       }`}
-      style={{ 
-        borderLeftColor: template.color, 
-        borderLeftWidth: '3px',
-        ...style
-      }}
     >
       <div className="flex items-start gap-3">
         <div 
