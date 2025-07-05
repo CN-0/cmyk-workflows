@@ -3,7 +3,7 @@ import * as LucideIcons from 'lucide-react';
 import { nodeTemplates } from '../../data/nodeTemplates';
 import { useDraggable } from '@dnd-kit/core';
 
-const DraggableNodeTemplate = ({ template }) => {
+const DraggableNodeTemplate = ({ template, onNodeSelect }) => {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: `template-${template.id}`,
     data: { 
@@ -29,6 +29,10 @@ const DraggableNodeTemplate = ({ template }) => {
       className={`p-3 border border-gray-200 rounded-lg hover:border-blue-300 hover:shadow-sm cursor-grab active:cursor-grabbing transition-all group ${
         isDragging ? 'opacity-50' : ''
       }`}
+      onClick={() => onNodeSelect && onNodeSelect(template)}
+      tabIndex={0}
+      role="button"
+      aria-label={`Add ${template.name} node`}
     >
       <div className="flex items-start gap-3">
         <div 
@@ -92,6 +96,7 @@ const NodePalette = ({ onNodeSelect }) => {
                   <DraggableNodeTemplate
                     key={template.id}
                     template={template}
+                    onNodeSelect={onNodeSelect}
                   />
                 ))}
               </div>
