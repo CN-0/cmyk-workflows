@@ -22,7 +22,7 @@ const createWorkflowSchema = Joi.object({
       }).required(),
       data: Joi.object().required(),
       config: Joi.object().optional()
-    })).required(),
+    })).min(0).required(),
     edges: Joi.array().items(Joi.object({
       id: Joi.string().required(),
       source: Joi.string().required(),
@@ -30,7 +30,7 @@ const createWorkflowSchema = Joi.object({
       sourceHandle: Joi.string().optional(),
       targetHandle: Joi.string().optional(),
       condition: Joi.string().optional()
-    })).required(),
+    })).min(0).required(),
     variables: Joi.object().optional(),
     settings: Joi.object().optional()
   }).required(),
