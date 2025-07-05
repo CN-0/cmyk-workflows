@@ -1,6 +1,7 @@
 const Joi = require('joi');
 
 const validateBody = (schema) => {
+  console.log(schema,req.body)
   return (req, res, next) => {
     const { error, value } = schema.validate(req.body);
     if (error) {
