@@ -126,3 +126,4 @@
 {"level":"info","message":"Redis client initialized","service":"flowforge-monolith","timestamp":"2025-07-05T18:38:30.222Z"}
 {"level":"info","message":"Connected to all databases","service":"flowforge-monolith","timestamp":"2025-07-05T18:38:30.223Z"}
 {"level":"info","message":"Monolithic backend running on port 3000","service":"flowforge-monolith","timestamp":"2025-07-05T18:38:30.226Z"}
+{"level":"info","message":"127.0.0.1 - - [05/Jul/2025:18:38:33 +0000] \"POST /api/workflows HTTP/1.1\" 403 52 \"https://localhost:5173/\" \"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36\"","service":"flowforge-monolith","timestamp":"2025-07-05T18:38:33.654Z"}
