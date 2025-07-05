@@ -7,6 +7,7 @@ import RegisterForm from './components/Auth/RegisterForm';
 import Dashboard from './pages/Dashboard';
 import Workflows from './pages/Workflows';
 import WorkflowBuilder from './pages/WorkflowBuilder';
+import EnhancedWorkflowBuilder from './pages/EnhancedWorkflowBuilder';
 import Executions from './pages/Executions';
 import Users from './pages/Users';
 import Templates from './pages/Templates';
@@ -68,7 +69,7 @@ const AppRoutes = () => {
         path="/workflows/new" 
         element={
           <ProtectedRoute>
-            <WorkflowBuilder />
+            <EnhancedWorkflowBuilder />
           </ProtectedRoute>
         } 
       />
@@ -76,7 +77,7 @@ const AppRoutes = () => {
         path="/workflows/:id/edit" 
         element={
           <ProtectedRoute>
-            <WorkflowBuilder />
+            <EnhancedWorkflowBuilder />
           </ProtectedRoute>
         } 
       />
