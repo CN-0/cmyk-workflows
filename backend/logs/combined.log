@@ -205,3 +205,4 @@
 {"level":"info","message":"User logged out successfully","service":"flowforge-monolith","timestamp":"2025-07-05T18:46:19.117Z","userId":"8974f233-7245-4658-a545-b74e546424db"}
 {"level":"info","message":"127.0.0.1 - - [05/Jul/2025:18:46:19 +0000] \"POST /api/auth/logout HTTP/1.1\" 200 52 \"https://localhost:5173/\" \"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36\"","service":"flowforge-monolith","timestamp":"2025-07-05T18:46:19.119Z"}
 {"level":"info","message":"127.0.0.1 - - [05/Jul/2025:18:46:26 +0000] \"GET / HTTP/1.1\" 404 139 \"https://localhost:3000/\" \"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36\"","service":"flowforge-monolith","timestamp":"2025-07-05T18:46:26.045Z"}
+{"level":"info","message":"SIGINT received, shutting down gracefully","service":"flowforge-monolith","timestamp":"2025-07-05T18:46:28.621Z"}
