@@ -2,7 +2,6 @@ import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { DndContext, useDraggable, useDroppable, DragOverlay } from '@dnd-kit/core';
 import * as LucideIcons from 'lucide-react';
 import NodeConfigPanel from './NodeConfigPanel';
-import ConnectionManager from './ConnectionManager';
 
 const NodeComponent = ({ 
   node, 
@@ -16,10 +15,9 @@ const NodeComponent = ({
   connectionSource,
   executionStatus
 }) => {
-  const [isDragging, setIsDragging] = useState(false);
   const nodeRef = useRef(null);
 
-  const { attributes, listeners, setNodeRef, transform, isDragging: dndIsDragging } = useDraggable({
+  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: node.id,
     data: { type: 'existing-node', node }
   });
@@ -29,7 +27,7 @@ const NodeComponent = ({
     left: node.position.x,
     top: node.position.y,
     transform: transform ? `translate3d(${transform.x}px, ${transform.y}px, 0)` : undefined,
-    zIndex: isDragging || dndIsDragging ? 1000 : isSelected ? 100 : 1,
+    zIndex: isDragging ? 1000 : isSelected ? 100 : 1,
   };
 
   // Get node template info
@@ -76,6 +74,8 @@ const NodeComponent = ({
 
   const handleConnectionPoint = (e, type, handleId) => {
     e.stopPropagation();
+    e.preventDefault();
+    
     if (isConnecting && connectionSource) {
       onConnectionEnd(node.id, type, handleId);
     } else {
@@ -95,19 +95,36 @@ const NodeComponent = ({
     return true;
   };
 
+  const handleNodeClick = (e) => {
+    e.stopPropagation();
+    onSelect && onSelect(node.id);
+  };
+
+  const handleDeleteClick = (e) => {
+    e.stopPropagation();
+    e.preventDefault();
+    onDelete(node.id);
+  };
+
   return (
     <div
       ref={setNodeRef}
       style={style}
-      className={`bg-white border-2 rounded-lg p-4 min-w-48 shadow-sm hover:shadow-md transition-all cursor-move select-none ${
+      className={`bg-white border-2 rounded-lg p-4 min-w-48 shadow-sm hover:shadow-md transition-all select-none ${
         isSelected ? 'border-blue-500 ring-2 ring-blue-200' : getStatusColor()
-      } ${isDragging || dndIsDragging ? 'opacity-75' : ''}`}
-      onClick={() => onSelect && onSelect(node.id)}
-      {...listeners}
-      {...attributes}
+      } ${isDragging ? 'opacity-75' : ''}`}
+      onClick={handleNodeClick}
     >
+      {/* Draggable handle */}
+      <div 
+        {...listeners}
+        {...attributes}
+        className="cursor-move absolute inset-0 z-10"
+        style={{ pointerEvents: 'auto' }}
+      />
+
       {/* Input connection points */}
-      <div className="absolute -left-2 top-1/2 transform -translate-y-1/2 space-y-1">
+      <div className="absolute -left-2 top-1/2 transform -translate-y-1/2 space-y-1 z-20">
         {node.inputs?.map((input, index) => (
           <div
             key={input.id}
@@ -118,7 +135,10 @@ const NodeComponent = ({
             }`}
             onClick={(e) => handleConnectionPoint(e, 'input', input.id)}
             title={input.name}
-            style={{ top: `${20 + index * 25}px` }}
+            style={{ 
+              top: `${20 + index * 25}px`,
+              pointerEvents: 'auto'
+            }}
           />
         )) || (
           <div
@@ -129,12 +149,13 @@ const NodeComponent = ({
             }`}
             onClick={(e) => handleConnectionPoint(e, 'input', 'default')}
             title="Input"
+            style={{ pointerEvents: 'auto' }}
           />
         )}
       </div>
       
       {/* Output connection points */}
-      <div className="absolute -right-2 top-1/2 transform -translate-y-1/2 space-y-1">
+      <div className="absolute -right-2 top-1/2 transform -translate-y-1/2 space-y-1 z-20">
         {node.outputs?.map((output, index) => (
           <div
             key={output.id}
@@ -145,7 +166,10 @@ const NodeComponent = ({
             }`}
             onClick={(e) => handleConnectionPoint(e, 'output', output.id)}
             title={output.name}
-            style={{ top: `${20 + index * 25}px` }}
+            style={{ 
+              top: `${20 + index * 25}px`,
+              pointerEvents: 'auto'
+            }}
           />
         )) || (
           <div
@@ -156,13 +180,14 @@ const NodeComponent = ({
             }`}
             onClick={(e) => handleConnectionPoint(e, 'output', 'default')}
             title="Output"
+            style={{ pointerEvents: 'auto' }}
           />
         )}
       </div>
 
       {/* Status indicator */}
       {executionStatus && (
-        <div className="absolute -top-2 -right-2">
+        <div className="absolute -top-2 -right-2 z-20">
           <div className={`w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-bold ${
             executionStatus === 'running' ? 'bg-blue-500 animate-pulse' :
             executionStatus === 'success' ? 'bg-green-500' :
@@ -177,41 +202,41 @@ const NodeComponent = ({
         </div>
       )}
 
-      <div className="flex items-center gap-3 mb-3">
-        <div 
-          className="p-2 rounded-lg transition-transform"
-          style={{ backgroundColor: nodeInfo.color + '20' }}
-        >
-          <IconComponent 
-            className="w-4 h-4" 
-            style={{ color: nodeInfo.color }}
-          />
-        </div>
-        <h4 className="font-medium text-gray-900 flex-1">{node.label}</h4>
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onDelete(node.id);
-          }}
-          className="p-1 text-gray-400 hover:text-red-500 transition-colors"
-        >
-          <LucideIcons.X className="w-4 h-4" />
-        </button>
-      </div>
-      
-      <div className="space-y-2">
-        <div className="text-xs text-gray-500">
-          Type: {node.type}
-        </div>
-        {node.config && Object.keys(node.config).length > 0 && (
-          <div className="text-xs text-gray-600">
-            {Object.entries(node.config).slice(0, 2).map(([key, value]) => (
-              <div key={key} className="truncate">
-                {key}: {String(value).substring(0, 20)}...
-              </div>
-            ))}
+      {/* Node content */}
+      <div className="relative z-10 pointer-events-none">
+        <div className="flex items-center gap-3 mb-3">
+          <div 
+            className="p-2 rounded-lg transition-transform"
+            style={{ backgroundColor: nodeInfo.color + '20' }}
+          >
+            <IconComponent 
+              className="w-4 h-4" 
+              style={{ color: nodeInfo.color }}
+            />
           </div>
-        )}
+          <h4 className="font-medium text-gray-900 flex-1">{node.label}</h4>
+          <button
+            onClick={handleDeleteClick}
+            className="p-1 text-gray-400 hover:text-red-500 transition-colors pointer-events-auto z-30"
+          >
+            <LucideIcons.X className="w-4 h-4" />
+          </button>
+        </div>
+        
+        <div className="space-y-2">
+          <div className="text-xs text-gray-500">
+            Type: {node.type}
+          </div>
+          {node.config && Object.keys(node.config).length > 0 && (
+            <div className="text-xs text-gray-600">
+              {Object.entries(node.config).slice(0, 2).map(([key, value]) => (
+                <div key={key} className="truncate">
+                  {key}: {String(value).substring(0, 20)}...
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -229,11 +254,38 @@ const NodeCanvas = ({
   const [connecting, setConnecting] = useState(null);
   const [draggedNode, setDraggedNode] = useState(null);
   const [showConfigPanel, setShowConfigPanel] = useState(false);
+  const [tempConnectionLine, setTempConnectionLine] = useState(null);
   const canvasRef = useRef(null);
 
   const { setNodeRef } = useDroppable({
     id: 'workflow-canvas',
   });
+
+  // Handle mouse move for temporary connection line
+  useEffect(() => {
+    const handleMouseMove = (e) => {
+      if (connecting && canvasRef.current) {
+        const rect = canvasRef.current.getBoundingClientRect();
+        const mouseX = e.clientX - rect.left;
+        const mouseY = e.clientY - rect.top;
+        
+        const startPoint = getConnectionPoint(connecting.nodeId, connecting.type, connecting.handleId);
+        if (startPoint) {
+          setTempConnectionLine({
+            start: startPoint,
+            end: { x: mouseX, y: mouseY }
+          });
+        }
+      }
+    };
+
+    if (connecting) {
+      document.addEventListener('mousemove', handleMouseMove);
+      return () => document.removeEventListener('mousemove', handleMouseMove);
+    } else {
+      setTempConnectionLine(null);
+    }
+  }, [connecting]);
 
   const handleDragStart = useCallback((event) => {
     const { active } = event;
@@ -252,13 +304,20 @@ const NodeCanvas = ({
         try {
           const template = JSON.parse(active.data.current.template);
           const rect = canvasRef.current?.getBoundingClientRect();
+          
+          // Calculate drop position relative to canvas
+          const dropX = event.activatorEvent?.clientX || 200;
+          const dropY = event.activatorEvent?.clientY || 100;
+          const canvasX = dropX - (rect?.left || 0);
+          const canvasY = dropY - (rect?.top || 0);
+          
           const newNode = {
             id: `node-${Date.now()}`,
             type: template.type,
             label: template.name,
             position: { 
-              x: Math.max(0, (event.activatorEvent?.clientX || 200) - (rect?.left || 0) - 100), 
-              y: Math.max(0, (event.activatorEvent?.clientY || 100) - (rect?.top || 0) - 50) 
+              x: Math.max(0, canvasX - 100), 
+              y: Math.max(0, canvasY - 50) 
             },
             data: {},
             config: {},
@@ -321,6 +380,7 @@ const NodeCanvas = ({
       onEdgesChange && onEdgesChange([...edges, newEdge]);
     }
     setConnecting(null);
+    setTempConnectionLine(null);
   }, [connecting, edges, onEdgesChange]);
 
   const deleteEdge = useCallback((edgeId) => {
@@ -342,6 +402,7 @@ const NodeCanvas = ({
     if (e.target === e.currentTarget) {
       onNodeSelect(null);
       setConnecting(null);
+      setTempConnectionLine(null);
       setShowConfigPanel(false);
     }
   };
@@ -361,7 +422,7 @@ const NodeCanvas = ({
             setNodeRef(el);
             canvasRef.current = el;
           }}
-          className="flex-1 bg-gray-50 relative overflow-hidden"
+          className="flex-1 bg-gray-50 relative overflow-auto"
           style={{
             backgroundImage: `
               radial-gradient(circle, #e5e7eb 1px, transparent 1px)
@@ -372,6 +433,7 @@ const NodeCanvas = ({
         >
           {/* Connection lines SVG */}
           <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ zIndex: 0 }}>
+            {/* Existing connections */}
             {edges.map((edge) => {
               const start = getConnectionPoint(edge.source, 'output', edge.sourceHandle);
               const end = getConnectionPoint(edge.target, 'input', edge.targetHandle);
@@ -418,12 +480,12 @@ const NodeCanvas = ({
             })}
             
             {/* Temporary connection line while connecting */}
-            {connecting && (
+            {tempConnectionLine && (
               <line
-                x1={getConnectionPoint(connecting.nodeId, connecting.type, connecting.handleId)?.x || 0}
-                y1={getConnectionPoint(connecting.nodeId, connecting.type, connecting.handleId)?.y || 0}
-                x2={getConnectionPoint(connecting.nodeId, connecting.type, connecting.handleId)?.x || 0}
-                y2={getConnectionPoint(connecting.nodeId, connecting.type, connecting.handleId)?.y || 0}
+                x1={tempConnectionLine.start.x}
+                y1={tempConnectionLine.start.y}
+                x2={tempConnectionLine.end.x}
+                y2={tempConnectionLine.end.y}
                 stroke="#3b82f6"
                 strokeWidth="2"
                 strokeDasharray="5,5"
@@ -465,7 +527,10 @@ const NodeCanvas = ({
             <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-blue-100 border border-blue-300 rounded-lg px-4 py-2 text-sm text-blue-800 z-50">
               Click on another node's {connecting.type === 'output' ? 'input' : 'output'} connection point to create a link
               <button 
-                onClick={() => setConnecting(null)}
+                onClick={() => {
+                  setConnecting(null);
+                  setTempConnectionLine(null);
+                }}
                 className="ml-2 text-blue-600 hover:text-blue-800"
               >
                 Cancel

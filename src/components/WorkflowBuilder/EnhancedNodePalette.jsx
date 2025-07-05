@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import * as LucideIcons from 'lucide-react';
-import { nodeTemplates } from '../../data/nodeTemplates';
+import { enhancedNodeTemplates } from '../../data/enhancedNodeTemplates';
 import { useDraggable } from '@dnd-kit/core';
 import { Search, Filter, ChevronDown, ChevronRight } from 'lucide-react';
 
@@ -138,7 +138,7 @@ const EnhancedNodePalette = ({ onNodeSelect }) => {
     utility: true,
   });
 
-  const filteredTemplates = nodeTemplates.filter(template => {
+  const filteredTemplates = enhancedNodeTemplates.filter(template => {
     const matchesSearch = template.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          template.description.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = categoryFilter === 'all' || template.category === categoryFilter;
@@ -266,7 +266,7 @@ const EnhancedNodePalette = ({ onNodeSelect }) => {
         <div className="text-xs text-gray-600 space-y-1">
           <div className="flex justify-between">
             <span>Total Nodes:</span>
-            <span className="font-medium">{nodeTemplates.length}</span>
+            <span className="font-medium">{enhancedNodeTemplates.length}</span>
           </div>
           <div className="flex justify-between">
             <span>Filtered:</span>
