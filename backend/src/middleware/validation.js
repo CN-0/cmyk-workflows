@@ -5,6 +5,7 @@ const validateBody = (schema) => {
   return (req, res, next) => {
     console.log(schema,req.body)
     const { error, value } = schema.validate(req.body);
+    console.log(error)
     if (error) {
       return res.status(400).json({
         success: false,
