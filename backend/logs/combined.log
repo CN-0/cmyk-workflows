@@ -305,3 +305,5 @@
 {"level":"info","message":"Redis client initialized","service":"flowforge-monolith","timestamp":"2025-07-07T16:56:28.881Z"}
 {"level":"info","message":"Connected to all databases","service":"flowforge-monolith","timestamp":"2025-07-07T16:56:28.881Z"}
 {"level":"info","message":"Monolithic backend running on port 3000","service":"flowforge-monolith","timestamp":"2025-07-07T16:56:28.885Z"}
+{"level":"error","message":"Update workflow error definition is not defined","service":"flowforge-monolith","stack":"ReferenceError: definition is not defined\n    at eval (file:///home/project/backend/src/routes/workflows.js#cjs:277:7)","timestamp":"2025-07-07T16:56:43.188Z"}
+{"level":"info","message":"127.0.0.1 - - [07/Jul/2025:16:56:43 +0000] \"PUT /api/workflows/e1a32f83-e50b-4567-a150-177418b593e4 HTTP/1.1\" 500 53 \"https://localhost:5173/\" \"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36\"","service":"flowforge-monolith","timestamp":"2025-07-07T16:56:43.192Z"}
