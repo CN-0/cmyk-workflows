@@ -275,3 +275,4 @@
 {"level":"info","message":"Connected to all databases","service":"flowforge-monolith","timestamp":"2025-07-07T16:54:32.627Z"}
 {"level":"info","message":"Monolithic backend running on port 3000","service":"flowforge-monolith","timestamp":"2025-07-07T16:54:32.640Z"}
 {"level":"info","message":"127.0.0.1 - - [07/Jul/2025:16:54:32 +0000] \"GET / HTTP/1.1\" 404 139 \"https://localhost:3000/\" \"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36\"","service":"flowforge-monolith","timestamp":"2025-07-07T16:54:32.722Z"}
+{"level":"info","message":"127.0.0.1 - - [07/Jul/2025:16:54:34 +0000] \"GET / HTTP/1.1\" 404 139 \"https://localhost:3000/\" \"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36\"","service":"flowforge-monolith","timestamp":"2025-07-07T16:54:34.789Z"}
