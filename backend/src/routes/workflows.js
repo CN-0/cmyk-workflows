@@ -279,23 +279,6 @@ router.put('/:id', authenticateToken, validateParams(idSchema), validateBody(upd
     }
 
     const currentVersion = existingResult.rows[0].version;
-      // Insert nodes into separate table
-    // Start transaction
-    await db.query('BEGIN TRANSACTION');
-
-    try {
-      if (definition.nodes && definition.nodes.length > 0) {
-        for (const node of definition.nodes) {
-          await db.query(
-            `INSERT INTO workflow_nodes (id, workflow_id, type, label, position_x, position_y, config, data, created_at, updated_at)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))`,
-            [
-              node.id,
-              workflowId,
-              node.type,
-              node.label,
-              node.position.x,
-              node.position.y,
 
     // Build update query dynamically
     const updateFields = [];
