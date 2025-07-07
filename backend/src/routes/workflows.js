@@ -20,8 +20,8 @@ const createWorkflowSchema = Joi.object({
         x: Joi.number().required(),
         y: Joi.number().required()
       }).required(),
-      data: Joi.object().required(),
-      config: Joi.object().optional()
+      data: Joi.object().optional().default({}),
+      config: Joi.object().optional().default({})
     })).min(0).required(),
     edges: Joi.array().items(Joi.object({
       id: Joi.string().required(),
@@ -138,7 +138,52 @@ router.get('/:id', authenticateToken, validateParams(idSchema), async (req, res)
     }
 
     const workflow = result.rows[0];
-    workflow.definition = JSON.parse(workflow.definition);
+    
+    // Get nodes with positions
+    const nodesResult = await db.query(
+      'SELECT * FROM workflow_nodes WHERE workflow_id = ? ORDER BY created_at',
+      [id]
+    );
+    
+    // Get edges
+    const edgesResult = await db.query(
+      'SELECT * FROM workflow_edges WHERE workflow_id = ? ORDER BY created_at',
+      [id]
+    );
+    
+    // Parse the stored definition and merge with database nodes/edges
+    const storedDefinition = JSON.parse(workflow.definition);
+    
+    // Use database nodes if available, otherwise fall back to stored definition
+    const nodes = nodesResult.rows.length > 0 
+      ? nodesResult.rows.map(node => ({
+          id: node.id,
+          type: node.type,
+          label: node.label,
+          position: { x: node.position_x, y: node.position_y },
+          data: JSON.parse(node.data || '{}'),
+          config: JSON.parse(node.config || '{}')
+        }))
+      : storedDefinition.nodes || [];
+    
+    // Use database edges if available, otherwise fall back to stored definition
+    const edges = edgesResult.rows.length > 0
+      ? edgesResult.rows.map(edge => ({
+          id: edge.id,
+          source: edge.source_node_id,
+          target: edge.target_node_id,
+          sourceHandle: edge.source_handle,
+          targetHandle: edge.target_handle
+        }))
+      : storedDefinition.edges || [];
+    
+    workflow.definition = {
+      nodes,
+      edges,
+      variables: storedDefinition.variables || {},
+      settings: storedDefinition.settings || {}
+    };
+    
     workflow.tags = workflow.tags ? JSON.parse(workflow.tags) : [];
 
     res.json({
@@ -160,6 +205,10 @@ router.post('/', authenticateToken, validateBody(createWorkflowSchema), async (r
     const db = req.app.locals.workflowDb;
     const redis = req.app.locals.redis;
 
+    // Start transaction
+    await db.query('BEGIN TRANSACTION');
+
+    try {
     const result = await db.query(
       `INSERT INTO workflows (id, name, description, status, definition, tags, created_by, created_at, updated_at, version)
        VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'), 1)`,
@@ -189,6 +238,11 @@ router.post('/', authenticateToken, validateBody(createWorkflowSchema), async (r
       success: true,
       data: workflow
     });
+    } catch (error) {
+      // Rollback transaction on error
+      await db.query('ROLLBACK');
+      throw error;
+    }
   } catch (error) {
     logger.error('Create workflow error', error);
     res.status(500).json({ success: false, error: 'Failed to create workflow' });
@@ -215,6 +269,51 @@ router.put('/:id', authenticateToken, validateParams(idSchema), validateBody(upd
     }
 
     const currentVersion = existingResult.rows[0].version;
+      // Insert nodes into separate table
+    // Start transaction
+    await db.query('BEGIN TRANSACTION');
+
+    try {
+      if (definition.nodes && definition.nodes.length > 0) {
+        for (const node of definition.nodes) {
+          await db.query(
+            `INSERT INTO workflow_nodes (id, workflow_id, type, label, position_x, position_y, config, data, created_at, updated_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))`,
+            [
+              node.id,
+              workflowId,
+              node.type,
+              node.label,
+              node.position.x,
+              node.position.y,
+              JSON.stringify(node.config || {}),
+              JSON.stringify(node.data || {})
+            ]
+          );
+        }
+      }
+
+      // Insert edges into separate table
+      if (definition.edges && definition.edges.length > 0) {
+        for (const edge of definition.edges) {
+          await db.query(
+            `INSERT INTO workflow_edges (id, workflow_id, source_node_id, target_node_id, source_handle, target_handle, created_at)
+             VALUES (?, ?, ?, ?, ?, ?, datetime('now'))`,
+            [
+              edge.id,
+              workflowId,
+              edge.source,
+              edge.target,
+              edge.sourceHandle || null,
+              edge.targetHandle || null
+            ]
+          );
+        }
+      }
+
+      // Commit transaction
+      await db.query('COMMIT');
+
 
     // Build update query dynamically
     const updateFields = [];
@@ -224,6 +323,51 @@ router.put('/:id', authenticateToken, validateParams(idSchema), validateBody(upd
       if (key === 'definition') {
         updateFields.push(`${key} = ?`);
         params.push(JSON.stringify(value));
+          
+          // Update nodes and edges in separate tables
+          if (value.nodes) {
+            // Delete existing nodes for this workflow
+            db.query('DELETE FROM workflow_nodes WHERE workflow_id = ?', [id]);
+            
+            // Insert updated nodes
+            for (const node of value.nodes) {
+              db.query(
+                `INSERT INTO workflow_nodes (id, workflow_id, type, label, position_x, position_y, config, data, created_at, updated_at)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))`,
+                [
+                  node.id,
+                  id,
+                  node.type,
+                  node.label,
+                  node.position.x,
+                  node.position.y,
+                  JSON.stringify(node.config || {}),
+                  JSON.stringify(node.data || {})
+                ]
+              );
+            }
+          }
+          
+          if (value.edges) {
+            // Delete existing edges for this workflow
+            db.query('DELETE FROM workflow_edges WHERE workflow_id = ?', [id]);
+            
+            // Insert updated edges
+            for (const edge of value.edges) {
+              db.query(
+                `INSERT INTO workflow_edges (id, workflow_id, source_node_id, target_node_id, source_handle, target_handle, created_at)
+                 VALUES (?, ?, ?, ?, ?, ?, datetime('now'))`,
+                [
+                  edge.id,
+                  id,
+                  edge.source,
+                  edge.target,
+                  edge.sourceHandle || null,
+                  edge.targetHandle || null
+                ]
+              );
+            }
+          }
       } else if (key === 'tags') {
         updateFields.push(`${key} = ?`);
         params.push(JSON.stringify(value));
@@ -245,6 +389,9 @@ router.put('/:id', authenticateToken, validateParams(idSchema), validateBody(upd
        WHERE id = ? AND created_by = ?`,
       params
     );
+
+      // Commit transaction
+      await db.query('COMMIT');
 
     // Get updated workflow
     const result = await db.query(
@@ -269,6 +416,11 @@ router.put('/:id', authenticateToken, validateParams(idSchema), validateBody(upd
       success: true,
       data: workflow
     });
+    } catch (error) {
+      // Rollback transaction on error
+      await db.query('ROLLBACK');
+      throw error;
+    }
   } catch (error) {
     logger.error('Update workflow error', error);
     res.status(500).json({ success: false, error: 'Failed to update workflow' });

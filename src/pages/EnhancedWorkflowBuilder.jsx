@@ -43,17 +43,18 @@ const EnhancedWorkflowBuilder = () => {
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      // Filter out frontend-specific properties from nodes before sending to backend
-      const sanitizedNodes = nodes.map(node => {
-        const { inputs, outputs, ...sanitizedNode } = node;
-        return sanitizedNode;
-      });
-
       const workflowData = {
         name: workflowName,
         description: workflowDescription,
         definition: {
-          nodes: sanitizedNodes,
+          nodes: nodes.map(node => ({
+            id: node.id,
+            type: node.type,
+            label: node.label,
+            position: node.position,
+            data: node.data || {},
+            config: node.config || {}
+          })),
           edges,
           variables: {},
           settings: {}

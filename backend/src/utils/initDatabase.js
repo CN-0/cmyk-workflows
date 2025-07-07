@@ -104,9 +104,45 @@ async function initializeDatabase() {
       )
     `);
 
+    // Create nodes table for storing individual nodes with positions
+    await workflowDb.exec(`
+      CREATE TABLE IF NOT EXISTS workflow_nodes (
+        id TEXT PRIMARY KEY,
+        workflow_id TEXT NOT NULL,
+        type TEXT NOT NULL,
+        label TEXT NOT NULL,
+        position_x REAL NOT NULL DEFAULT 0,
+        position_y REAL NOT NULL DEFAULT 0,
+        config TEXT DEFAULT '{}',
+        data TEXT DEFAULT '{}',
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (workflow_id) REFERENCES workflows(id) ON DELETE CASCADE
+      )
+    `);
+
+    // Create edges table for storing connections between nodes
+    await workflowDb.exec(`
+      CREATE TABLE IF NOT EXISTS workflow_edges (
+        id TEXT PRIMARY KEY,
+        workflow_id TEXT NOT NULL,
+        source_node_id TEXT NOT NULL,
+        target_node_id TEXT NOT NULL,
+        source_handle TEXT,
+        target_handle TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (workflow_id) REFERENCES workflows(id) ON DELETE CASCADE,
+        FOREIGN KEY (source_node_id) REFERENCES workflow_nodes(id) ON DELETE CASCADE,
+        FOREIGN KEY (target_node_id) REFERENCES workflow_nodes(id) ON DELETE CASCADE
+      )
+    `);
     // Create indexes
     await workflowDb.exec('CREATE INDEX IF NOT EXISTS idx_workflows_created_by ON workflows(created_by)');
     await workflowDb.exec('CREATE INDEX IF NOT EXISTS idx_workflows_status ON workflows(status)');
+    await workflowDb.exec('CREATE INDEX IF NOT EXISTS idx_workflow_nodes_workflow_id ON workflow_nodes(workflow_id)');
+    await workflowDb.exec('CREATE INDEX IF NOT EXISTS idx_workflow_edges_workflow_id ON workflow_edges(workflow_id)');
+    await workflowDb.exec('CREATE INDEX IF NOT EXISTS idx_workflow_edges_source ON workflow_edges(source_node_id)');
+    await workflowDb.exec('CREATE INDEX IF NOT EXISTS idx_workflow_edges_target ON workflow_edges(target_node_id)');
 
     logger.info('Workflow database initialized successfully');
 
