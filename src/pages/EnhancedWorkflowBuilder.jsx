@@ -49,8 +49,11 @@ const EnhancedWorkflowBuilder = () => {
         alert('Failed to load workflow: ' + error.message);
       } finally {
         setIsLoading(false);
-        }
       }
+    };
+
+    loadWorkflowData();
+  }, [id, getWorkflow]);
 
   const handleSave = async () => {
     setIsSaving(true);
