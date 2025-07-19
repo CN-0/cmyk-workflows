@@ -53,7 +53,9 @@ const EnhancedWorkflowBuilder = () => {
             label: node.label,
             position: node.position,
             data: node.data || {},
-            config: node.config || {}
+            config: node.config || {},
+            inputs: node.inputs || [],
+            outputs: node.outputs || []
           })),
           edges,
           variables: {},

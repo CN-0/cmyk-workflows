@@ -355,7 +355,13 @@ const NodeCanvas = ({
 
   const updateNode = useCallback((id, updates) => {
     const updatedNodes = nodes.map(node => 
-      node.id === id ? { ...node, ...updates } : node
+      node.id === id ? { 
+        ...node, 
+        ...updates,
+        // Ensure config and data are properly merged
+        config: updates.config ? { ...node.config, ...updates.config } : node.config,
+        data: updates.data ? { ...node.data, ...updates.data } : node.data
+      } : node
     );
     onNodesChange(updatedNodes);
   }, [nodes, onNodesChange]);

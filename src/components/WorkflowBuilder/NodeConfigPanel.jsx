@@ -637,7 +637,11 @@ const NodeConfigPanel = ({ node, onUpdate, onClose }) => {
 
   const handleSave = () => {
     if (validateConfig()) {
-      onUpdate({ config, label: config.label || node.label });
+      onUpdate({ 
+        config, 
+        label: config.label || node.label,
+        data: node.data || {}
+      });
     }
   };
 

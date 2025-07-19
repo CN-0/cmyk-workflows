@@ -230,6 +230,24 @@ router.post('/', authenticateToken, validateBody(createWorkflowSchema), async (r
         );
       }
     }
+
+    // Insert edges into separate table
+    if (definition.edges && definition.edges.length > 0) {
+      for (const edge of definition.edges) {
+        await db.query(
+          `INSERT INTO workflow_edges (id, workflow_id, source_node_id, target_node_id, source_handle, target_handle, created_at)
+           VALUES (?, ?, ?, ?, ?, ?, datetime('now'))`,
+          [
+            edge.id,
+            workflowId,
+            edge.source,
+            edge.target,
+            edge.sourceHandle || null,
+            edge.targetHandle || null
+          ]
+        );
+      }
+    }
     // Get the created workflow
     const workflowResult = await db.query(
       'SELECT * FROM workflows WHERE id = ?',
@@ -237,7 +255,46 @@ router.post('/', authenticateToken, validateBody(createWorkflowSchema), async (r
     );
     
     const workflow = workflowResult.rows[0];
-    workflow.definition = JSON.parse(workflow.definition);
+    
+    // Get nodes with positions and config
+    const nodesResult = await db.query(
+      'SELECT * FROM workflow_nodes WHERE workflow_id = ? ORDER BY created_at',
+      [workflowId]
+    );
+    
+    // Get edges
+    const edgesResult = await db.query(
+      'SELECT * FROM workflow_edges WHERE workflow_id = ? ORDER BY created_at',
+      [workflowId]
+    );
+    
+    // Parse the stored definition and merge with database nodes/edges
+    const storedDefinition = JSON.parse(workflow.definition);
+    
+    const nodes = nodesResult.rows.map(node => ({
+      id: node.id,
+      type: node.type,
+      label: node.label,
+      position: { x: node.position_x, y: node.position_y },
+      data: JSON.parse(node.data || '{}'),
+      config: JSON.parse(node.config || '{}')
+    }));
+    
+    const edges = edgesResult.rows.map(edge => ({
+      id: edge.id,
+      source: edge.source_node_id,
+      target: edge.target_node_id,
+      sourceHandle: edge.source_handle,
+      targetHandle: edge.target_handle
+    }));
+    
+    workflow.definition = {
+      nodes,
+      edges,
+      variables: storedDefinition.variables || {},
+      settings: storedDefinition.settings || {}
+    };
+    
     workflow.tags = JSON.parse(workflow.tags);
 
     // Cache workflow definition for quick access
