@@ -33,6 +33,18 @@ export const WorkflowProvider = ({ children }) => {
     }
   };
 
+  const getWorkflow = async (id) => {
+    try {
+      const response = await apiService.getWorkflow(id);
+      if (response.success) {
+        return response.data;
+      }
+    } catch (error) {
+      console.error('Failed to get workflow:', error);
+      throw error;
+    }
+  };
+
   const loadExecutions = async () => {
     try {
       const response = await apiService.getExecutions();
@@ -125,6 +137,7 @@ export const WorkflowProvider = ({ children }) => {
       executions,
       nodeTemplates,
       loading,
+      getWorkflow,
       createWorkflow,
       updateWorkflow,
       deleteWorkflow,

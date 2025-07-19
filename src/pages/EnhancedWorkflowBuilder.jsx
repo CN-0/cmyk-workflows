@@ -9,7 +9,7 @@ import { useWorkflow } from '../contexts/WorkflowContext';
 const EnhancedWorkflowBuilder = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { createWorkflow, updateWorkflow, workflows } = useWorkflow();
+  const { createWorkflow, updateWorkflow, workflows, getWorkflow } = useWorkflow();
   
   const [nodes, setNodes] = useState([]);
   const [edges, setEdges] = useState([]);
@@ -25,20 +25,32 @@ const EnhancedWorkflowBuilder = () => {
 
   // Load existing workflow if editing
   useEffect(() => {
-    if (id && workflows.length > 0) {
+    const loadWorkflowData = async () => {
+      if (!id) return;
+      
       setIsLoading(true);
-      const workflow = workflows.find(w => w.id === id);
-      if (workflow) {
-        setWorkflowName(workflow.name);
-        setWorkflowDescription(workflow.description || '');
-        if (workflow.definition) {
-          setNodes(workflow.definition.nodes || []);
-          setEdges(workflow.definition.edges || []);
+      try {
+        console.log('Loading workflow data for ID:', id);
+        const workflow = await getWorkflow(id);
+        console.log('Loaded workflow:', workflow);
+        
+        if (workflow) {
+          setWorkflowName(workflow.name);
+          setWorkflowDescription(workflow.description || '');
+          if (workflow.definition) {
+            setNodes(workflow.definition.nodes || []);
+            setEdges(workflow.definition.edges || []);
+            console.log('Set nodes:', workflow.definition.nodes);
+            console.log('Set edges:', workflow.definition.edges);
+          }
+        }
+      } catch (error) {
+        console.error('Failed to load workflow:', error);
+        alert('Failed to load workflow: ' + error.message);
+      } finally {
+        setIsLoading(false);
         }
       }
-      setIsLoading(false);
-    }
-  }, [id, workflows]);
 
   const handleSave = async () => {
     setIsSaving(true);
