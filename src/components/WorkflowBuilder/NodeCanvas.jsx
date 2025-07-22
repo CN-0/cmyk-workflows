@@ -584,7 +584,6 @@ const NodeCanvas = ({
               </div>
               <h4 className="font-medium text-gray-900">{draggedNode.label}</h4>
             </div>
-          </div>
         ) : null}
       </DragOverlay>
     </DndContext>
