@@ -575,7 +575,6 @@ const NodeCanvas = ({
           isVisible={!!selectedNode}
         />
       )}
-      </div>
 
       <DragOverlay>
         {draggedNode ? (
