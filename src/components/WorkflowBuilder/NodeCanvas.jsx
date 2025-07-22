@@ -51,9 +51,11 @@ const NodeComponent = ({
   const nodeInfo = getNodeInfo();
   const IconComponent = LucideIcons[nodeInfo.icon] || LucideIcons.Circle;
 
+  // Use node.executionStatus instead of undefined variable
   const getStatusColor = () => {
-    if (!executionStatus) return 'border-gray-200';
-    switch (executionStatus) {
+    const status = node.executionStatus;
+    if (!status) return 'border-gray-200';
+    switch (status) {
       case 'running': return 'border-blue-500 bg-blue-50';
       case 'success': return 'border-green-500 bg-green-50';
       case 'error': return 'border-red-500 bg-red-50';
@@ -204,18 +206,18 @@ const NodeComponent = ({
         </div>
 
         {/* Status indicator */}
-        {executionStatus && (
+        {node.executionStatus && (
           <div className="absolute -top-2 -right-2" style={{ zIndex: 20 }}>
             <div className={`w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-bold ${
-              executionStatus === 'running' ? 'bg-blue-500 animate-pulse' :
-              executionStatus === 'success' ? 'bg-green-500' :
-              executionStatus === 'error' ? 'bg-red-500' :
+              node.executionStatus === 'running' ? 'bg-blue-500 animate-pulse' :
+              node.executionStatus === 'success' ? 'bg-green-500' :
+              node.executionStatus === 'error' ? 'bg-red-500' :
               'bg-yellow-500'
             }`}>
-              {executionStatus === 'running' && <LucideIcons.Play className="w-3 h-3" />}
-              {executionStatus === 'success' && <LucideIcons.Check className="w-3 h-3" />}
-              {executionStatus === 'error' && <LucideIcons.X className="w-3 h-3" />}
-              {executionStatus === 'warning' && <LucideIcons.AlertTriangle className="w-3 h-3" />}
+              {node.executionStatus === 'running' && <LucideIcons.Play className="w-3 h-3" />}
+              {node.executionStatus === 'success' && <LucideIcons.Check className="w-3 h-3" />}
+              {node.executionStatus === 'error' && <LucideIcons.X className="w-3 h-3" />}
+              {node.executionStatus === 'warning' && <LucideIcons.AlertTriangle className="w-3 h-3" />}
             </div>
           </div>
         )}
