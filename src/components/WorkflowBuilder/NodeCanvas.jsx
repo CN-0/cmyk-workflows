@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
+import ConfigurationSidebar from './ConfigurationSidebar';
 import { DndContext, useDraggable, useDroppable, DragOverlay } from '@dnd-kit/core';
 import Draggable from 'react-draggable';
 import * as LucideIcons from 'lucide-react';
@@ -14,7 +15,6 @@ const NodeComponent = ({
   onSelect,
   isConnecting,
   connectionSource,
-  executionStatus,
   onPositionChange
 }) => {
   const nodeRef = useRef(null);
@@ -270,7 +270,6 @@ const NodeCanvas = ({
   onEdgesChange,
   selectedNode,
   onNodeSelect,
-  executionStatuses = {}
 }) => {
   const [connecting, setConnecting] = useState(null);
   const [draggedNode, setDraggedNode] = useState(null);
@@ -278,6 +277,7 @@ const NodeCanvas = ({
   const [tempConnectionLine, setTempConnectionLine] = useState(null);
   const canvasRef = useRef(null);
 
+  // Configuration sidebar state
   const { setNodeRef } = useDroppable({
     id: 'workflow-canvas',
   });
@@ -540,7 +540,6 @@ const NodeCanvas = ({
               onSelect={handleNodeSelect}
               isConnecting={!!connecting}
               connectionSource={connecting}
-              executionStatus={executionStatuses[node.id]}
               onPositionChange={handleNodePositionChange}
             />
           ))}
@@ -562,23 +561,25 @@ const NodeCanvas = ({
           )}
         </div>
 
-        {/* Configuration Panel */}
-        {showConfigPanel && selectedNodeData && (
-          <NodeConfigPanel
-            node={selectedNodeData}
-            onUpdate={(updates) => updateNode(selectedNodeData.id, updates)}
-            onClose={() => {
-              setShowConfigPanel(false);
-              onNodeSelect(null);
-            }}
-          />
-        )}
+      </div>
+
+      {/* Configuration Sidebar */}
+      {selectedNode && (
+        <ConfigurationSidebar
+          selectedNode={nodes.find(n => n.id === selectedNode)}
+          onNodeUpdate={updateNode}
+          onClose={() => {
+            onNodeSelect(null);
+            setShowConfigPanel(false);
+          }}
+          isVisible={!!selectedNode}
+        />
+      )}
       </div>
 
       <DragOverlay>
         {draggedNode ? (
           <div className="bg-white border-2 border-blue-300 rounded-lg p-4 min-w-48 shadow-lg opacity-75">
-            <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg bg-gray-100">
                 <LucideIcons.Circle className="w-4 h-4 text-gray-600" />
               </div>
