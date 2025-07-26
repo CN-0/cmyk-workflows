@@ -56,6 +56,15 @@ export const WorkflowProvider = ({ children }) => {
     }
   };
 
+  // Auto-refresh executions every 10 seconds
+  useEffect(() => {
+    if (user && !authLoading) {
+      loadExecutions();
+      const interval = setInterval(loadExecutions, 10000);
+      return () => clearInterval(interval);
+    }
+  }, [user, authLoading]);
+
   useEffect(() => {
     // Only load data when user is authenticated and auth loading is complete
     if (user && !authLoading) {

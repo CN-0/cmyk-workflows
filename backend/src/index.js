@@ -131,15 +131,26 @@ async function startServer() {
 
     logger.info("Connected to all databases");
 
-    app.listen(PORT, () => {
-      console.log(`\n🚀 FlowForge Backend Server Started`);
-      console.log(`📍 Server running on: http://localhost:${PORT}`);
-      console.log(`🔍 Health check: http://localhost:${PORT}/health`);
-      console.log(`📊 API endpoints: http://localhost:${PORT}/api/*`);
-      console.log(
+    app.listen(PORT, async () => {
+      logger.info(`\n🚀 FlowForge Backend Server Started`);
+      logger.info(`📍 Server running on: http://localhost:${PORT}`);
+      logger.info(`🔍 Health check: http://localhost:${PORT}/health`);
+      logger.info(`📊 API endpoints: http://localhost:${PORT}/api/*`);
+      logger.info(
         `⚡ Request logging enabled - all requests will be shown below\n`,
       );
       logger.info(`Monolithic backend running on port ${PORT}`);
+
+      // Initialize workflow scheduler
+      try {
+        const WorkflowScheduler = require("./services/workflowScheduler");
+        const scheduler = new WorkflowScheduler(app.locals.workflowDb, app.locals.executionDb);
+        app.locals.scheduler = scheduler;
+        await scheduler.start();
+        logger.info('Workflow scheduler initialized');
+      } catch (error) {
+        logger.error('Failed to initialize scheduler', error);
+      }
     });
   } catch (error) {
     logger.error("Failed to start server:", error);

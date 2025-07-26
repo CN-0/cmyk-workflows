@@ -65,11 +65,16 @@ const ScheduleNodeConfig = ({ config, onChange, errors }) => {
     
     // Set default values based on frequency
     if (frequency === 'daily') {
-      onChange('cronExpression', generateCronExpression());
+      const cron = generateCronExpression();
+      onChange('cronExpression', cron);
     } else if (frequency === 'weekly') {
       if (!config.dayOfWeek) onChange('dayOfWeek', 1);
+      const cron = generateCronExpression();
+      onChange('cronExpression', cron);
     } else if (frequency === 'monthly') {
       if (!config.dayOfMonth) onChange('dayOfMonth', 1);
+      const cron = generateCronExpression();
+      onChange('cronExpression', cron);
     }
   };
 

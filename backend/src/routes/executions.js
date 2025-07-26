@@ -110,31 +110,20 @@ router.post('/', authenticateToken, validateBody(triggerWorkflowSchema), async (
   try {
     const { workflowId, triggerData } = req.body;
     const userId = req.user.userId;
-    const db = req.app.locals.executionDb;
+    const executionDb = req.app.locals.executionDb;
+    const workflowDb = req.app.locals.workflowDb;
 
-    const executionId = uuidv4();
-    
-    await db.query(
-      `INSERT INTO workflow_executions 
-       (id, workflow_id, workflow_version, status, triggered_by, trigger_data, context, metrics)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-      [
-        executionId,
-        workflowId,
-        1,
-        'pending',
-        userId,
-        JSON.stringify(triggerData || {}),
-        JSON.stringify({}),
-        JSON.stringify({ totalNodes: 0, completedNodes: 0, failedNodes: 0 })
-      ]
-    );
+    // Use the workflow executor
+    const WorkflowExecutor = require('../services/workflowExecutor');
+    const executor = new WorkflowExecutor(executionDb, workflowDb);
 
-    logger.info('Workflow triggered', { workflowId, executionId, userId });
+    const result = await executor.executeWorkflow(workflowId, triggerData || {}, userId);
+
+    logger.info('Workflow executed', { workflowId, executionId: result.executionId, userId });
 
     res.status(201).json({
       success: true,
-      data: { executionId }
+      data: result
     });
   } catch (error) {
     logger.error('Trigger execution error', error);

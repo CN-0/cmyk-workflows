@@ -66,13 +66,13 @@ async function initializeDatabase() {
     if (!adminExists) {
       const adminId = uuidv4();
       const hashedPassword = await bcrypt.hash('admin123', 12);
-      
+
       await authDb.run(
         `INSERT INTO users (id, email, password, name, role, email_verified, created_at, updated_at) 
          VALUES (?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))`,
         [adminId, 'admin@flowforge.com', hashedPassword, 'Admin User', 'admin', 1]
       );
-      
+
       logger.info('Created default admin user: admin@flowforge.com / admin123');
     }
 
@@ -182,13 +182,11 @@ async function initializeDatabase() {
       CREATE TABLE IF NOT EXISTS execution_logs (
         id TEXT PRIMARY KEY,
         execution_id TEXT NOT NULL,
-        node_id TEXT NOT NULL,
-        timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
-        level TEXT NOT NULL CHECK (level IN ('debug', 'info', 'warning', 'error')),
+        node_id TEXT,
+        level TEXT NOT NULL,
         message TEXT NOT NULL,
-        data TEXT,
-        duration INTEGER,
-        FOREIGN KEY (execution_id) REFERENCES workflow_executions(id) ON DELETE CASCADE
+        timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (execution_id) REFERENCES workflow_executions (id) ON DELETE CASCADE
       )
     `);
 
