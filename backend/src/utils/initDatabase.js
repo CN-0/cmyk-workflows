@@ -115,6 +115,8 @@ async function initializeDatabase() {
         position_y REAL NOT NULL DEFAULT 0,
         config TEXT DEFAULT '{}',
         data TEXT DEFAULT '{}',
+        inputs TEXT DEFAULT '[]',
+        outputs TEXT DEFAULT '[]',
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (workflow_id) REFERENCES workflows(id) ON DELETE CASCADE

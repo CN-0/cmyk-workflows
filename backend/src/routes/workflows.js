@@ -21,7 +21,20 @@ const createWorkflowSchema = Joi.object({
         y: Joi.number().required()
       }).required(),
       data: Joi.object().optional().default({}),
-      config: Joi.object().optional().default({})
+      config: Joi.object().optional().default({}),
+      inputs: Joi.array().items(Joi.object({
+        id: Joi.string().required(),
+        name: Joi.string().required(),
+        type: Joi.string().valid('string', 'number', 'boolean', 'object', 'array', 'datetime', 'any').required(),
+        required: Joi.boolean().optional().default(false),
+        description: Joi.string().optional()
+      })).optional().default([]),
+      outputs: Joi.array().items(Joi.object({
+        id: Joi.string().required(),
+        name: Joi.string().required(),
+        type: Joi.string().valid('string', 'number', 'boolean', 'object', 'array', 'datetime', 'any').required(),
+        description: Joi.string().optional()
+      })).optional().default([])
     })).min(0).required(),
     edges: Joi.array().items(Joi.object({
       id: Joi.string().required(),
@@ -41,7 +54,42 @@ const createWorkflowSchema = Joi.object({
 const updateWorkflowSchema = Joi.object({
   name: Joi.string().min(1).max(255).optional(),
   description: Joi.string().max(1000).optional(),
-  definition: Joi.object().optional(),
+  definition: Joi.object({
+    nodes: Joi.array().items(Joi.object({
+      id: Joi.string().required(),
+      type: Joi.string().required(),
+      label: Joi.string().required(),
+      position: Joi.object({
+        x: Joi.number().required(),
+        y: Joi.number().required()
+      }).required(),
+      data: Joi.object().optional().default({}),
+      config: Joi.object().optional().default({}),
+      inputs: Joi.array().items(Joi.object({
+        id: Joi.string().required(),
+        name: Joi.string().required(),
+        type: Joi.string().valid('string', 'number', 'boolean', 'object', 'array', 'datetime', 'any').required(),
+        required: Joi.boolean().optional().default(false),
+        description: Joi.string().optional()
+      })).optional().default([]),
+      outputs: Joi.array().items(Joi.object({
+        id: Joi.string().required(),
+        name: Joi.string().required(),
+        type: Joi.string().valid('string', 'number', 'boolean', 'object', 'array', 'datetime', 'any').required(),
+        description: Joi.string().optional()
+      })).optional().default([])
+    })).optional(),
+    edges: Joi.array().items(Joi.object({
+      id: Joi.string().required(),
+      source: Joi.string().required(),
+      target: Joi.string().required(),
+      sourceHandle: Joi.string().optional(),
+      targetHandle: Joi.string().optional(),
+      condition: Joi.string().optional()
+    })).optional(),
+    variables: Joi.object().optional(),
+    settings: Joi.object().optional()
+  }).optional(),
   tags: Joi.array().items(Joi.string()).optional(),
   status: Joi.string().valid('active', 'inactive', 'draft').optional()
 });
@@ -162,7 +210,9 @@ router.get('/:id', authenticateToken, validateParams(idSchema), async (req, res)
           label: node.label,
           position: { x: node.position_x, y: node.position_y },
           data: JSON.parse(node.data || '{}'),
-          config: JSON.parse(node.config || '{}')
+          config: JSON.parse(node.config || '{}'),
+          inputs: JSON.parse(node.inputs || '[]'),
+          outputs: JSON.parse(node.outputs || '[]')
         }))
       : storedDefinition.nodes || [];
     
@@ -215,8 +265,8 @@ router.post('/', authenticateToken, validateBody(createWorkflowSchema), async (r
     if (definition.nodes && definition.nodes.length > 0) {
       for (const node of definition.nodes) {
         await db.query(
-          `INSERT INTO workflow_nodes (id, workflow_id, type, label, position_x, position_y, config, data, created_at, updated_at)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))`,
+          `INSERT INTO workflow_nodes (id, workflow_id, type, label, position_x, position_y, config, data, inputs, outputs, created_at, updated_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))`,
           [
             node.id,
             workflowId,
@@ -225,7 +275,9 @@ router.post('/', authenticateToken, validateBody(createWorkflowSchema), async (r
             node.position.x,
             node.position.y,
             JSON.stringify(node.config || {}),
-            JSON.stringify(node.data || {})
+            JSON.stringify(node.data || {}),
+            JSON.stringify(node.inputs || []),
+            JSON.stringify(node.outputs || [])
           ]
         );
       }
@@ -277,7 +329,9 @@ router.post('/', authenticateToken, validateBody(createWorkflowSchema), async (r
       label: node.label,
       position: { x: node.position_x, y: node.position_y },
       data: JSON.parse(node.data || '{}'),
-      config: JSON.parse(node.config || '{}')
+      config: JSON.parse(node.config || '{}'),
+      inputs: JSON.parse(node.inputs || '[]'),
+      outputs: JSON.parse(node.outputs || '[]')
     }));
     
     const edges = edgesResult.rows.map(edge => ({
@@ -379,8 +433,8 @@ router.put('/:id', authenticateToken, validateParams(idSchema), validateBody(upd
         // Insert updated nodes
         for (const node of definition.nodes) {
           await db.query(
-            `INSERT INTO workflow_nodes (id, workflow_id, type, label, position_x, position_y, config, data, created_at, updated_at)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))`,
+            `INSERT INTO workflow_nodes (id, workflow_id, type, label, position_x, position_y, config, data, inputs, outputs, created_at, updated_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))`,
             [
               node.id,
               id,
@@ -389,7 +443,9 @@ router.put('/:id', authenticateToken, validateParams(idSchema), validateBody(upd
               node.position.x,
               node.position.y,
               JSON.stringify(node.config || {}),
-              JSON.stringify(node.data || {})
+              JSON.stringify(node.data || {}),
+              JSON.stringify(node.inputs || []),
+              JSON.stringify(node.outputs || [])
             ]
           );
         }
