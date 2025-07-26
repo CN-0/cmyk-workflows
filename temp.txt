@@ -1,0 +1,44 @@
+cd backend && node -e "
+const { initializeDatabase } = require('./src/utils/initDatabase');
+const { open } = require('sqlite');
+const sqlite3 = require('sqlite3');
+const path = require('path');
+
+async function addColumnsIfNotExists() {
+  try {
+    const workflowDbPath = path.join(__dirname, 'data', 'workflow.db');
+    const workflowDb = await open({
+      filename: workflowDbPath,
+      driver: sqlite3.Database
+    });
+
+    // Check if inputs column exists
+    const inputsColumn = await workflowDb.get(
+      \"SELECT name FROM pragma_table_info('workflow_nodes') WHERE name='inputs'\"
+    );
+    
+    if (!inputsColumn) {
+      console.log('Adding inputs column...');
+      await workflowDb.exec('ALTER TABLE workflow_nodes ADD COLUMN inputs TEXT DEFAULT \"[]\"');
+    }
+
+    // Check if outputs column exists
+    const outputsColumn = await workflowDb.get(
+      \"SELECT name FROM pragma_table_info('workflow_nodes') WHERE name='outputs'\"
+    );
+    
+    if (!outputsColumn) {
+      console.log('Adding outputs column...');
+      await workflowDb.exec('ALTER TABLE workflow_nodes ADD COLUMN outputs TEXT DEFAULT \"[]\"');
+    }
+
+    await workflowDb.close();
+    console.log('Database migration completed successfully');
+  } catch (error) {
+    console.error('Migration failed:', error);
+    process.exit(1);
+  }
+}
+
+addColumnsIfNotExists();
+"
